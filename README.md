@@ -4,4 +4,4 @@ I'm not satisfied with the available task management products; I'd use a noteboo
 
 This is set up based loosely on the Getting Things Done system, by David Allen -- but just in the simple way I use it, with no extraneous bells or whistles.
 
-Not to be confused with [Things][https://culturedcode.com/things/], the GTD app that only works on Mac & iOS. 
+Not to be confused with [Things](https://culturedcode.com/things/), the GTD app that only works on Mac & iOS. 
