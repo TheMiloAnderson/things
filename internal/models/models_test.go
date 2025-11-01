@@ -6,7 +6,7 @@ import (
 
 var dbName = "tasks_test"
 
-func TestGetByID(t *testing.T) {
+func TestUserGetByID(t *testing.T) {
 	u := User{}
 	u.DBName = dbName
 	u.Connect()
