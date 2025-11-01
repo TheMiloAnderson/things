@@ -11,7 +11,10 @@ import (
 
 var db *sql.DB
 
-type Table struct{ DB *sql.DB }
+type Table struct {
+	DB     *sql.DB
+	DBName string
+}
 
 func (t *Table) Connect() {
 	cfg := mysql.NewConfig()
@@ -19,7 +22,7 @@ func (t *Table) Connect() {
 	cfg.Passwd = os.Getenv("DBPASS")
 	cfg.Net = "tcp"
 	cfg.Addr = "127.0.0.1:3306"
-	cfg.DBName = "tasks"
+	cfg.DBName = t.DBName
 
 	var err error
 	db, err = sql.Open("mysql", cfg.FormatDSN())
