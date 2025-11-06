@@ -20,14 +20,14 @@ type Task struct {
 }
 
 func (t *Task) GetById(id int) error {
-	row := t.DB.QueryRow("SELECT * FROM tasks WHERE id = ?", id)
+	row := t.QueryRow("SELECT * FROM tasks WHERE id = ?", id)
 	err := row.Scan(&t.ID, &t.Name, &t.Status, &t.Priority, &t.DateCreated, &t.ProjectID, &t.AreaID, &t.UserID)
 	return err
 }
 
 func (t *Task) Save() (int64, error) {
 	// TODO figure out the ContextIDs logic
-	result, err := t.DB.Exec(
+	result, err := t.Exec(
 		`INSERT INTO tasks (name, status, priority, date_created, project_id, area_id, user_id)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`, t.Name, t.Status, t.Priority, t.DateCreated, t.ProjectID, t.AreaID, t.UserID,
 	)
@@ -39,4 +39,23 @@ func (t *Task) Save() (int64, error) {
 		return 0, fmt.Errorf("Save Task: %v", err)
 	}
 	return id, nil
+}
+
+func (t *Task) Update() error {
+	_, err := t.Exec(
+		`UPDATE tasks SET name = ?, status = ?, priority = ?, date_created = ?, project_id = ?, area_id = ?, user_id = ? 
+		WHERE id = ?`, t.Name, t.Status, t.Priority, t.DateCreated, t.ProjectID, t.AreaID, t.UserID, t.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("Update Task: %v", err)
+	}
+	return nil
+}
+
+func (t *Task) Delete() error {
+	_, err := t.Exec(`DELETE FROM tasks WHERE id = ?`, t.ID)
+	if err != nil {
+		return fmt.Errorf("Delete Task: %v", err)
+	}
+	return nil
 }

@@ -36,7 +36,7 @@ CREATE TABLE projects (
     notes       TEXT,
     area_id     INT,
     user_id     INT NOT NULL,
-    FOREIGN KEY (area_id) REFERENCES areas(id),
+    FOREIGN KEY (area_id) REFERENCES areas(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (id)
 );
@@ -50,8 +50,8 @@ CREATE TABLE tasks (
     project_id      INT,
     area_id         INT,
     user_id         INT NOT NULL,
-    FOREIGN KEY (project_id) REFERENCES projects(id),
-    FOREIGN KEY (area_id) REFERENCES areas(id),
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE SET NULL,
+    FOREIGN KEY (area_id) REFERENCES areas(id) ON DELETE SET NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     PRIMARY KEY (id)
 );

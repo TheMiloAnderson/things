@@ -13,7 +13,9 @@ type User struct {
 }
 
 func (u *User) GetById(id int) error {
-	row := u.DB.QueryRow("SELECT * FROM users WHERE id = ?", id)
+	row := u.QueryRow("SELECT * FROM users WHERE id = ?", id)
 	err := row.Scan(&u.ID, &u.Name, &u.PasswordHash, &u.Inbox)
 	return err
 }
+
+// TODO: worry about this when authN is set up
