@@ -9,8 +9,7 @@ var dbName = "tasks"
 
 func main() {
 	a := models.Area{}
-	a.DBName = dbName
-	a.Connect()
+	a.Connect(dbName)
 	a.GetById(1)
 	fmt.Println(a)
 }

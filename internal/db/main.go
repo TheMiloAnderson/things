@@ -10,18 +10,21 @@ import (
 )
 
 type Table struct {
-	db     *sql.DB
-	Tx     *sql.Tx
-	DBName string
+	DB *sql.DB
+	Tx *sql.Tx
 }
 
-func (t *Table) Connect() {
+func (t *Table) Connect(dbName string) {
+	if t.DB != nil {
+		// already connected (e.g., set by tests)
+		return
+	}
 	cfg := mysql.NewConfig()
 	cfg.User = os.Getenv("DBUSER")
 	cfg.Passwd = os.Getenv("DBPASS")
 	cfg.Net = "tcp"
 	cfg.Addr = "127.0.0.1:3306"
-	cfg.DBName = t.DBName
+	cfg.DBName = dbName
 	cfg.ParseTime = true
 
 	db, err := sql.Open("mysql", cfg.FormatDSN())
@@ -31,15 +34,15 @@ func (t *Table) Connect() {
 	if err := db.Ping(); err != nil {
 		log.Fatalf("DB ping error: %v", err)
 	}
-	fmt.Println("Connected to DB:", t.DBName)
-	t.db = db
+	fmt.Printf("✅ Connected to %v database\n", dbName)
+	t.DB = db
 }
 
 func (t *Table) BeginTx() error {
-	if t.db == nil {
+	if t.DB == nil {
 		return fmt.Errorf("DB is not connected")
 	}
-	tx, err := t.db.Begin()
+	tx, err := t.DB.Begin()
 	if err != nil {
 		return err
 	}
@@ -69,12 +72,12 @@ func (t *Table) Exec(query string, args ...interface{}) (sql.Result, error) {
 	if t.Tx != nil {
 		return t.Tx.Exec(query, args...)
 	}
-	return t.db.Exec(query, args...)
+	return t.DB.Exec(query, args...)
 }
 
 func (t *Table) QueryRow(query string, args ...interface{}) *sql.Row {
 	if t.Tx != nil {
 		return t.Tx.QueryRow(query, args...)
 	}
-	return t.db.QueryRow(query, args...)
+	return t.DB.QueryRow(query, args...)
 }

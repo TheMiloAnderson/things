@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"things/internal/db"
 	"time"
 )
@@ -32,11 +31,11 @@ func (t *Task) Save() (int64, error) {
 		VALUES (?, ?, ?, ?, ?, ?, ?)`, t.Name, t.Status, t.Priority, t.DateCreated, t.ProjectID, t.AreaID, t.UserID,
 	)
 	if err != nil {
-		return 0, fmt.Errorf("Save Task: %v", err)
+		return 0, err
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		return 0, fmt.Errorf("Save Task: %v", err)
+		return 0, err
 	}
 	return id, nil
 }
@@ -46,16 +45,10 @@ func (t *Task) Update() error {
 		`UPDATE tasks SET name = ?, status = ?, priority = ?, date_created = ?, project_id = ?, area_id = ?, user_id = ? 
 		WHERE id = ?`, t.Name, t.Status, t.Priority, t.DateCreated, t.ProjectID, t.AreaID, t.UserID, t.ID,
 	)
-	if err != nil {
-		return fmt.Errorf("Update Task: %v", err)
-	}
-	return nil
+	return err
 }
 
 func (t *Task) Delete() error {
 	_, err := t.Exec(`DELETE FROM tasks WHERE id = ?`, t.ID)
-	if err != nil {
-		return fmt.Errorf("Delete Task: %v", err)
-	}
-	return nil
+	return err
 }

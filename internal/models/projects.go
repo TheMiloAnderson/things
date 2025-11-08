@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"things/internal/db"
 )
 
@@ -27,11 +26,11 @@ func (p *Project) Save() (int64, error) {
 		VALUES (?, ?, ?, ?, ?)`, p.Name, p.Status, p.Notes, p.AreaID, p.UserID,
 	)
 	if err != nil {
-		return 0, fmt.Errorf("Save Area: %v", err)
+		return 0, err
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		return 0, fmt.Errorf("Save Area: %v", err)
+		return 0, err
 	}
 	return id, nil
 }
@@ -41,16 +40,10 @@ func (p *Project) Update() error {
 		`UPDATE projects SET name = ?, status = ?, notes = ?, area_id = ?, user_id = ? WHERE id = ?`,
 		p.Name, p.Status, p.Notes, p.AreaID, p.UserID, p.ID,
 	)
-	if err != nil {
-		return fmt.Errorf("Update Project: %v", err)
-	}
-	return nil
+	return err
 }
 
 func (p *Project) Delete() error {
-	_, err := p.Exec(`DELETE FROM areas WHERE id = ?`, p.ID)
-	if err != nil {
-		return fmt.Errorf("Delete Project: %v", err)
-	}
-	return nil
+	_, err := p.Exec(`DELETE FROM projects WHERE id = ?`, p.ID)
+	return err
 }

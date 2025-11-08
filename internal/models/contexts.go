@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"things/internal/db"
 )
 
@@ -24,27 +23,21 @@ func (c *Context) Save() (int64, error) {
 		VALUES (?, ?)`, c.Name, c.UserID,
 	)
 	if err != nil {
-		return 0, fmt.Errorf("Save Context: %v", err)
+		return 0, err
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		return 0, fmt.Errorf("Save Context: %v", err)
+		return 0, err
 	}
 	return id, nil
 }
 
 func (c *Context) Update() error {
 	_, err := c.Exec(`UPDATE contexts SET name = ? WHERE id = ?`, c.Name, c.ID)
-	if err != nil {
-		return fmt.Errorf("Update Context: %v", err)
-	}
-	return nil
+	return err
 }
 
 func (c *Context) Delete() error {
 	_, err := c.Exec(`DELETE FROM contexts WHERE id = ?`, c.ID)
-	if err != nil {
-		return fmt.Errorf("Delete Context: %v", err)
-	}
-	return nil
+	return err
 }

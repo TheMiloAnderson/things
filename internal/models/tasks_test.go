@@ -6,31 +6,27 @@ import (
 	"time"
 )
 
-var dbName = "tasks_test"
-
-func TestUserGetByID(t *testing.T) {
-	u := User{}
-	u.DBName = dbName
-	u.Connect()
-	if err := u.BeginTx(); err != nil {
+func beginTaskTransaction(t *testing.T) Task {
+	task := Task{}
+	task.DB = testDB
+	if err := task.BeginTx(); err != nil {
 		t.Fatalf("BeginTx error: %v", err)
 	}
-	defer u.Rollback()
+	return task
+}
 
-	err := u.GetById(1)
-	if err != nil || u.Name != "Milo Anderson" {
-		t.Errorf(`User GetByID Error: %v, Name: %v`, err, u.Name)
+func TestTaskGetByID(t *testing.T) {
+	task := beginTaskTransaction(t)
+	defer task.Rollback()
+
+	err := task.GetById(1)
+	if err != nil || task.Name != "Call Aviator" {
+		t.Errorf(`TestTaskGetByID Error: %v`, err)
 	}
 }
 
 func TestTaskSave(t *testing.T) {
-	task := Task{}
-	task.DBName = dbName
-	task.Connect()
-
-	if err := task.BeginTx(); err != nil {
-		t.Fatalf("BeginTx error: %v", err)
-	}
+	task := beginTaskTransaction(t)
 	defer task.Rollback()
 
 	task.Name = "Call Dave"
@@ -46,7 +42,7 @@ func TestTaskSave(t *testing.T) {
 		t.Fatalf("Task Save Error: %v", err)
 	}
 
-	newTask := Task{Table: task.Table}
+	newTask := Task{}
 	row := task.QueryRow("SELECT * FROM tasks WHERE id = ?", taskID)
 	err = row.Scan(
 		&newTask.ID,
@@ -64,12 +60,7 @@ func TestTaskSave(t *testing.T) {
 }
 
 func TestTaskUpdate(t *testing.T) {
-	task := Task{}
-	task.DBName = dbName
-	task.Connect()
-	if err := task.BeginTx(); err != nil {
-		t.Fatalf("BeginTx error: %v", err)
-	}
+	task := beginTaskTransaction(t)
 	defer task.Rollback()
 
 	err := task.GetById(1)
@@ -90,12 +81,7 @@ func TestTaskUpdate(t *testing.T) {
 }
 
 func TestTaskDelete(t *testing.T) {
-	task := Task{}
-	task.DBName = dbName
-	task.Connect()
-	if err := task.BeginTx(); err != nil {
-		t.Fatalf("BeginTx error: %v", err)
-	}
+	task := beginTaskTransaction(t)
 	defer task.Rollback()
 
 	task.ID = 1
