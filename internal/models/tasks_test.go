@@ -30,8 +30,8 @@ func TestTaskSave(t *testing.T) {
 	defer task.Rollback()
 
 	task.Name = "Call Dave"
-	task.Status = "active"
-	task.Priority = 1
+	task.Status = StatusActive
+	task.Priority = PriorityMed
 	task.DateCreated = time.Now()
 	task.ProjectID = 1
 	task.AreaID = 1

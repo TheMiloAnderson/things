@@ -9,14 +9,30 @@ type Task struct {
 	db.Table
 	ID          int
 	Name        string
-	Status      string
-	Priority    int
+	Status      Status
+	Priority    Priority
 	DateCreated time.Time
 	ProjectID   int
 	AreaID      int
 	UserID      int
 	ContextIDs  []int
 }
+
+type Status string
+
+const (
+	StatusActive   Status = "active"
+	StatusDone     Status = "done"
+	StatusCanceled Status = "canceled"
+)
+
+type Priority int
+
+const (
+	PriorityLow  Priority = 0
+	PriorityMed  Priority = 1
+	PriorityHigh Priority = 2
+)
 
 func (t *Task) GetById(id int) error {
 	row := t.QueryRow("SELECT * FROM tasks WHERE id = ?", id)

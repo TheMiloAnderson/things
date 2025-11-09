@@ -8,7 +8,7 @@ type Project struct {
 	db.Table
 	ID     int
 	Name   string
-	Status string
+	Status Status
 	Notes  string
 	AreaID int
 	UserID int

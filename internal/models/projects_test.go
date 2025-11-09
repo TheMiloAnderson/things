@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-// Helper to start a transaction for Project tests
 func beginProjectTransaction(t *testing.T) Project {
 	p := Project{}
 	p.DB = testDB
@@ -30,7 +29,7 @@ func TestProjectSave(t *testing.T) {
 	defer p.Rollback()
 
 	p.Name = "New Website"
-	p.Status = "active"
+	p.Status = StatusActive
 	p.Notes = "Build a new portfolio site"
 	p.AreaID = 1
 	p.UserID = 1
