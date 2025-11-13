@@ -18,4 +18,10 @@ func (u *User) GetById(id int) error {
 	return err
 }
 
-// TODO: worry about this when authN is set up
+func (u *User) Update() error {
+	_, err := u.Exec(
+		`UPDATE users SET name = ?, password_hash = ?, inbox = ?
+		WHERE id = ?`, u.Name, u.PasswordHash, u.Inbox, u.ID,
+	)
+	return err
+}
