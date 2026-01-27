@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -41,5 +42,6 @@ func main() {
 		}
 	})
 
+	fmt.Println("Server is starting on port 8888...")
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }

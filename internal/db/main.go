@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/go-sql-driver/mysql"
+	"github.com/lpernett/godotenv"
 )
 
 type Table struct {
@@ -16,10 +17,11 @@ type Table struct {
 
 func (t *Table) Connect(dbName string) {
 	if t.DB != nil {
-		// already connected (e.g., set by tests)
+		// already connected (i.e. set by tests)
 		return
 	}
 	cfg := mysql.NewConfig()
+	godotenv.Load()
 	cfg.User = os.Getenv("DBUSER")
 	cfg.Passwd = os.Getenv("DBPASS")
 	cfg.Net = "tcp"
