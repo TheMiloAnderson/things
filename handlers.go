@@ -7,6 +7,7 @@ import (
 )
 
 func inboxHandler(w http.ResponseWriter, r *http.Request) {
+	store := getStore()
 	session, _ := store.Get(r, "session-name")
 	auth, _ := session.Values["authenticated"].(bool)
 	userID := session.Values["user_id"].(int)
