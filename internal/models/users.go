@@ -18,6 +18,12 @@ func (u *User) GetById(id int) error {
 	return err
 }
 
+func (u *User) GetByName(name string) error {
+	row := u.QueryRow("SELECT * FROM users WHERE name = ?", name)
+	err := row.Scan(&u.ID, &u.Name, &u.PasswordHash, &u.Inbox)
+	return err
+}
+
 func (u *User) Update() error {
 	_, err := u.Exec(
 		`UPDATE users SET name = ?, password_hash = ?, inbox = ?

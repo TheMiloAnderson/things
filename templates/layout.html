@@ -1,9 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
+    <title>Things</title>
 </head>
 <body>
-    {{template "inbox" .}}
+    <nav>
+        <strong><a href="/">THINGS</a></strong>
+        <div>
+            {{if .IsAuthenticated}}
+                <a href="/logout">Logout</a>
+            {{else}}
+                <a href="/login">Login</a>
+            {{end}}
+        </div>
+    </nav>
+    {{template "content" .Data}}
 </body>
 </html>
