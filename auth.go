@@ -43,7 +43,10 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			"templates/layout.html",
 			"templates/login.html",
 		))
-		tmpl.ExecuteTemplate(w, "layout.html", nil)
+		err := tmpl.ExecuteTemplate(w, "layout.html", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 	name := r.FormValue("username")

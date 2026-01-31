@@ -24,7 +24,10 @@ func inboxHandler(w http.ResponseWriter, r *http.Request) {
 	))
 	if r.Method == http.MethodGet {
 		pageData.Data = u.Inbox
-		tmpl.ExecuteTemplate(w, "layout.html", pageData)
+		err := tmpl.ExecuteTemplate(w, "layout.html", pageData)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
@@ -37,6 +40,9 @@ func inboxHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		pageData.Data = u.Inbox
-		tmpl.ExecuteTemplate(w, "layout.html", pageData)
+		err := tmpl.ExecuteTemplate(w, "layout.html", pageData)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }
