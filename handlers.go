@@ -1,30 +1,23 @@
 package main
 
 import (
-	"html/template"
 	"net/http"
 	"things/internal/models"
 )
 
-func inboxHandler(w http.ResponseWriter, r *http.Request) {
-	store := getStore()
-	session, _ := store.Get(r, "session-name")
+func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := a.Store.Get(r, "session-name")
 	auth, _ := session.Values["authenticated"].(bool)
 	userID := session.Values["user_id"].(int)
-	u := models.User{}
-	u.Connect(dbName)
+	u := models.User{Connection: *a.Connection}
 	u.GetById(userID)
 	pageData := PageData{
 		IsAuthenticated: auth,
 		Username:        u.Name,
 	}
-	tmpl := template.Must(template.ParseFiles(
-		"templates/layout.html",
-		"templates/inbox.html",
-	))
 	if r.Method == http.MethodGet {
 		pageData.Data = u.Inbox
-		err := tmpl.ExecuteTemplate(w, "layout.html", pageData)
+		err := a.Templates["inbox.html"].ExecuteTemplate(w, "layout.html", pageData)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -40,7 +33,7 @@ func inboxHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		pageData.Data = u.Inbox
-		err := tmpl.ExecuteTemplate(w, "layout.html", pageData)
+		err := a.Templates["inbox.html"].ExecuteTemplate(w, "layout.html", pageData)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	db.Table
+	db.Connection
 	ID           int
 	Name         string
 	PasswordHash string

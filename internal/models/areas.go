@@ -5,7 +5,7 @@ import (
 )
 
 type Area struct {
-	db.Table
+	db.Connection
 	ID     int
 	Name   string
 	UserID int

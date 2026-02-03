@@ -8,12 +8,12 @@ import (
 )
 
 var testDB *sql.DB
-var dbName = "tasks_test"
 
 func TestMain(m *testing.M) {
-	table := db.Table{}
-	table.Connect(dbName)
-	testDB = table.DB
+	os.Chdir("../../")
+	conn := db.Connection{}
+	conn.Connect("tasks_test")
+	testDB = conn.DB
 
 	// Run all tests
 	code := m.Run()

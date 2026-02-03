@@ -5,7 +5,7 @@ import (
 )
 
 type Context struct {
-	db.Table
+	db.Connection
 	ID     int
 	Name   string
 	UserID int

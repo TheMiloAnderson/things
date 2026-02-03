@@ -1,7 +1,6 @@
 package main
 
 import (
-	"html/template"
 	"net/http"
 	"os"
 	"things/internal/models"
@@ -37,13 +36,9 @@ func AuthRequired(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
+func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		tmpl := template.Must(template.ParseFiles(
-			"templates/layout.html",
-			"templates/login.html",
-		))
-		err := tmpl.ExecuteTemplate(w, "layout.html", nil)
+		err := a.Templates["login.html"].ExecuteTemplate(w, "layout.html", nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -51,16 +46,14 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	name := r.FormValue("username")
 	pass := r.FormValue("password")
-	u := models.User{}
-	u.Connect(dbName)
+	u := models.User{Connection: *a.Connection}
 	err := u.GetByName(name)
 	err = bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(pass))
 	if err != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
-	store := getStore()
-	session, _ := store.Get(r, "session-name")
+	session, _ := a.Store.Get(r, "session-name")
 	session.Values["authenticated"] = true
 	session.Values["user_id"] = u.ID
 	session.Save(r, w)
@@ -68,9 +61,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	store := getStore()
-	session, _ := store.Get(r, "session-name")
+func (a *App) logoutHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := a.Store.Get(r, "session-name")
 	session.Values["authenticated"] = false
 	session.Options.MaxAge = -1
 	session.Save(r, w)

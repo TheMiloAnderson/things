@@ -10,12 +10,12 @@ import (
 	"github.com/lpernett/godotenv"
 )
 
-type Table struct {
+type Connection struct {
 	DB *sql.DB
 	Tx *sql.Tx
 }
 
-func (t *Table) Connect(dbName string) {
+func (t *Connection) Connect(dbName string) {
 	if t.DB != nil {
 		// already connected (i.e. set by tests)
 		return
@@ -40,7 +40,7 @@ func (t *Table) Connect(dbName string) {
 	t.DB = db
 }
 
-func (t *Table) BeginTx() error {
+func (t *Connection) BeginTx() error {
 	if t.DB == nil {
 		return fmt.Errorf("DB is not connected")
 	}
@@ -52,7 +52,7 @@ func (t *Table) BeginTx() error {
 	return nil
 }
 
-func (t *Table) Commit() error {
+func (t *Connection) Commit() error {
 	if t.Tx == nil {
 		return fmt.Errorf("no active transaction")
 	}
@@ -61,7 +61,7 @@ func (t *Table) Commit() error {
 	return err
 }
 
-func (t *Table) Rollback() error {
+func (t *Connection) Rollback() error {
 	if t.Tx == nil {
 		return fmt.Errorf("no active transaction")
 	}
@@ -70,14 +70,14 @@ func (t *Table) Rollback() error {
 	return err
 }
 
-func (t *Table) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (t *Connection) Exec(query string, args ...interface{}) (sql.Result, error) {
 	if t.Tx != nil {
 		return t.Tx.Exec(query, args...)
 	}
 	return t.DB.Exec(query, args...)
 }
 
-func (t *Table) QueryRow(query string, args ...interface{}) *sql.Row {
+func (t *Connection) QueryRow(query string, args ...interface{}) *sql.Row {
 	if t.Tx != nil {
 		return t.Tx.QueryRow(query, args...)
 	}

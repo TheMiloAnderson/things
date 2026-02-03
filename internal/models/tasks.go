@@ -6,7 +6,7 @@ import (
 )
 
 type Task struct {
-	db.Table
+	db.Connection
 	ID          int
 	Name        string
 	Status      Status
