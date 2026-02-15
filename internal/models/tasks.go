@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"things/internal/db"
 	"time"
 )
@@ -36,15 +37,38 @@ const (
 
 func (t *Task) GetById(id int) error {
 	row := t.QueryRow("SELECT * FROM tasks WHERE id = ?", id)
-	err := row.Scan(&t.ID, &t.Name, &t.Status, &t.Priority, &t.DateCreated, &t.ProjectID, &t.AreaID, &t.UserID)
+	var projectID sql.NullInt64
+	var areaID sql.NullInt64
+	err := row.Scan(&t.ID, &t.Name, &t.Status, &t.Priority, &t.DateCreated, &projectID, &areaID, &t.UserID)
+	if err != nil {
+		return err
+	}
+	if projectID.Valid {
+		t.ProjectID = int(projectID.Int64)
+	} else {
+		t.ProjectID = 0
+	}
+	if areaID.Valid {
+		t.AreaID = int(areaID.Int64)
+	} else {
+		t.AreaID = 0
+	}
 	return err
 }
 
 func (t *Task) Save() (int64, error) {
 	// TODO figure out the ContextIDs logic
+	var projectID any = t.ProjectID
+	if t.ProjectID == 0 {
+		projectID = nil
+	}
+	var areaID any = t.AreaID
+	if t.AreaID == 0 {
+		areaID = nil
+	}
 	result, err := t.Exec(
 		`INSERT INTO tasks (name, status, priority, date_created, project_id, area_id, user_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`, t.Name, t.Status, t.Priority, t.DateCreated, t.ProjectID, t.AreaID, t.UserID,
+		VALUES (?, ?, ?, ?, ?, ?, ?)`, t.Name, t.Status, t.Priority, t.DateCreated, projectID, areaID, t.UserID,
 	)
 	if err != nil {
 		return 0, err
@@ -57,9 +81,17 @@ func (t *Task) Save() (int64, error) {
 }
 
 func (t *Task) Update() error {
+	var projectID any = t.ProjectID
+	if t.ProjectID == 0 {
+		projectID = nil
+	}
+	var areaID any = t.AreaID
+	if t.AreaID == 0 {
+		areaID = nil
+	}
 	_, err := t.Exec(
 		`UPDATE tasks SET name = ?, status = ?, priority = ?, date_created = ?, project_id = ?, area_id = ?, user_id = ? 
-		WHERE id = ?`, t.Name, t.Status, t.Priority, t.DateCreated, t.ProjectID, t.AreaID, t.UserID, t.ID,
+		WHERE id = ?`, t.Name, t.Status, t.Priority, t.DateCreated, projectID, areaID, t.UserID, t.ID,
 	)
 	return err
 }

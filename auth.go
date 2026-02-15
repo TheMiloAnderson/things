@@ -38,7 +38,12 @@ func AuthRequired(next http.HandlerFunc) http.HandlerFunc {
 
 func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := a.Templates["login.html"].ExecuteTemplate(w, "layout.html", nil)
+		pageData := PageData{
+			IsAuthenticated: false,
+			Username:        "",
+			Data:            nil,
+		}
+		err := a.Templates["login.html"].ExecuteTemplate(w, "layout.html", pageData)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

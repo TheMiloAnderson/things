@@ -77,6 +77,13 @@ func (t *Connection) Exec(query string, args ...interface{}) (sql.Result, error)
 	return t.DB.Exec(query, args...)
 }
 
+func (t *Connection) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	if t.Tx != nil {
+		return t.Tx.Query(query, args...)
+	}
+	return t.DB.Query(query, args...)
+}
+
 func (t *Connection) QueryRow(query string, args ...interface{}) *sql.Row {
 	if t.Tx != nil {
 		return t.Tx.QueryRow(query, args...)

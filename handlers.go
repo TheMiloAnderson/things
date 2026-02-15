@@ -1,9 +1,26 @@
 package main
 
 import (
+	"database/sql"
 	"net/http"
+	"strconv"
+	"strings"
 	"things/internal/models"
+	"time"
 )
+
+type InboxViewModel struct {
+	Inbox           string
+	Projects        []models.Project
+	Areas           []models.Area
+}
+
+type TaskViewModel struct {
+	models.Task
+	Projects         []models.Project
+	Areas            []models.Area
+	FormattedCreated string
+}
 
 func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := a.Store.Get(r, "session-name")
@@ -11,16 +28,24 @@ func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
 	userID := session.Values["user_id"].(int)
 	u := models.User{Connection: *a.Connection}
 	u.GetById(userID)
+	
+	// Fetch active projects & all areas for user
+	pr := models.Project{Connection: *a.Connection}
+	projects, _ := pr.AllActiveForUser(userID)
+	ar := models.Area{Connection: *a.Connection}
+	areas, _ := ar.AllForUser(userID)
+
 	pageData := PageData{
 		IsAuthenticated: auth,
 		Username:        u.Name,
 	}
 	if r.Method == http.MethodGet {
-		pageData.Data = u.Inbox
+		pageData.Data = InboxViewModel{Inbox: u.Inbox, Projects: projects, Areas: areas}
 		err := a.Templates["inbox.html"].ExecuteTemplate(w, "layout.html", pageData)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		return
 	}
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
@@ -31,11 +56,218 @@ func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
 		u.Inbox = inboxText
 		if err := u.Update(); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-		pageData.Data = u.Inbox
+		pageData.Data = InboxViewModel{Inbox: u.Inbox, Projects: projects, Areas: areas}
 		err := a.Templates["inbox.html"].ExecuteTemplate(w, "layout.html", pageData)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		return
+	}
+
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
+
+func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	session, _ := a.Store.Get(r, "session-name")
+	userID := session.Values["user_id"].(int)
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Could not parse form", http.StatusBadRequest)
+		return
+	}
+
+	name := strings.TrimSpace(r.FormValue("name"))
+	if name == "" {
+		http.Error(w, "Task name is required", http.StatusBadRequest)
+		return
+	}
+
+	status := models.Status(strings.TrimSpace(r.FormValue("status")))
+	switch status {
+	case models.StatusActive, models.StatusDone, models.StatusCanceled:
+		// ok
+	default:
+		status = models.StatusActive
+	}
+
+	priorityInt, err := strconv.Atoi(strings.TrimSpace(r.FormValue("priority")))
+	if err != nil {
+		priorityInt = int(models.PriorityLow)
+	}
+	priority := models.Priority(priorityInt)
+	switch priority {
+	case models.PriorityLow, models.PriorityMed, models.PriorityHigh:
+		// ok
+	default:
+		priority = models.PriorityLow
+	}
+
+	projectID := 0
+	if s := strings.TrimSpace(r.FormValue("project_id")); s != "" {
+		if v, err := strconv.Atoi(s); err == nil {
+			projectID = v
+		}
+	}
+
+	areaID := 0
+	if s := strings.TrimSpace(r.FormValue("area_id")); s != "" {
+		if v, err := strconv.Atoi(s); err == nil {
+			areaID = v
+		}
+	}
+
+	t := models.Task{Connection: *a.Connection}
+	t.Name = name
+	t.Status = status
+	t.Priority = priority
+	t.DateCreated = time.Now()
+	t.ProjectID = projectID
+	t.AreaID = areaID
+	t.UserID = userID
+
+	id, err := t.Save()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/task/"+strconv.FormatInt(id, 10), http.StatusSeeOther)
+}
+
+func (a *App) taskByIDHandler(w http.ResponseWriter, r *http.Request) {
+	// Expected: /task/{id}
+	idStr := strings.TrimPrefix(r.URL.Path, "/task/")
+	if idStr == "" || strings.Contains(idStr, "/") {
+		http.NotFound(w, r)
+		return
+	}
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		http.NotFound(w, r)
+		return
+	}
+
+	session, _ := a.Store.Get(r, "session-name")
+	auth, _ := session.Values["authenticated"].(bool)
+	userID := session.Values["user_id"].(int)
+	u := models.User{Connection: *a.Connection}
+	_ = u.GetById(userID)
+
+	// Fetch all options for the user
+	pr := models.Project{Connection: *a.Connection}
+	projects, _ := pr.AllActiveForUser(userID)
+	ar := models.Area{Connection: *a.Connection}
+	areas, _ := ar.AllForUser(userID)
+
+	pageData := PageData{
+		IsAuthenticated: auth,
+		Username:        u.Name,
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		t := models.Task{Connection: *a.Connection}
+		if err := t.GetById(id); err != nil {
+			if err == sql.ErrNoRows {
+				http.NotFound(w, r)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if t.UserID != userID {
+			http.NotFound(w, r)
+			return
+		}
+
+		formatted := ""
+		if !t.DateCreated.IsZero() {
+			if loc, err := time.LoadLocation("America/Los_Angeles"); err == nil {
+				formatted = t.DateCreated.In(loc).Format("January 2, 2006 at 3:04 PM MST")
+			} else {
+				formatted = t.DateCreated.Format("January 2, 2006 at 3:04 PM MST")
+			}
+		}
+		vm := TaskViewModel{Task: t, Projects: projects, Areas: areas, FormattedCreated: formatted}
+		pageData.Data = vm
+		if err := a.Templates["task.html"].ExecuteTemplate(w, "layout.html", pageData); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+
+	case http.MethodPost:
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "Could not parse form", http.StatusBadRequest)
+			return
+		}
+
+		t := models.Task{Connection: *a.Connection}
+		if err := t.GetById(id); err != nil {
+			if err == sql.ErrNoRows {
+				http.NotFound(w, r)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if t.UserID != userID {
+			http.NotFound(w, r)
+			return
+		}
+
+		name := strings.TrimSpace(r.FormValue("name"))
+		if name == "" {
+			http.Error(w, "Task name is required", http.StatusBadRequest)
+			return
+		}
+		t.Name = name
+
+		status := models.Status(strings.TrimSpace(r.FormValue("status")))
+		switch status {
+		case models.StatusActive, models.StatusDone, models.StatusCanceled:
+			t.Status = status
+		}
+
+		priorityInt, err := strconv.Atoi(strings.TrimSpace(r.FormValue("priority")))
+		if err == nil {
+			p := models.Priority(priorityInt)
+			switch p {
+			case models.PriorityLow, models.PriorityMed, models.PriorityHigh:
+				t.Priority = p
+			}
+		}
+
+		projectID := 0
+		if s := strings.TrimSpace(r.FormValue("project_id")); s != "" {
+			if v, err := strconv.Atoi(s); err == nil {
+				projectID = v
+			}
+		}
+		areaID := 0
+		if s := strings.TrimSpace(r.FormValue("area_id")); s != "" {
+			if v, err := strconv.Atoi(s); err == nil {
+				areaID = v
+			}
+		}
+		t.ProjectID = projectID
+		t.AreaID = areaID
+
+		if err := t.Update(); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/task/"+strconv.Itoa(id), http.StatusSeeOther)
+		return
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
 	}
 }

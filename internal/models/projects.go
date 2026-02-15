@@ -47,3 +47,21 @@ func (p *Project) Delete() error {
 	_, err := p.Exec(`DELETE FROM projects WHERE id = ?`, p.ID)
 	return err
 }
+
+func (p *Project) AllActiveForUser(userID int) ([]Project, error) {
+	rows, err := p.Query("SELECT id, name, status, notes, area_id, user_id FROM projects WHERE user_id = ? AND status = 'active' ORDER BY name ASC", userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var projects []Project
+	for rows.Next() {
+		var prj Project
+		err := rows.Scan(&prj.ID, &prj.Name, &prj.Status, &prj.Notes, &prj.AreaID, &prj.UserID)
+		if err != nil {
+			return nil, err
+		}
+		projects = append(projects, prj)
+	}
+	return projects, nil
+}

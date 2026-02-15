@@ -41,3 +41,21 @@ func (a *Area) Delete() error {
 	_, err := a.Exec(`DELETE FROM areas WHERE id = ?`, a.ID)
 	return err
 }
+
+func (a *Area) AllForUser(userID int) ([]Area, error) {
+	rows, err := a.Query("SELECT id, name, user_id FROM areas WHERE user_id = ? ORDER BY name ASC", userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var areas []Area
+	for rows.Next() {
+		var ar Area
+		err := rows.Scan(&ar.ID, &ar.Name, &ar.UserID)
+		if err != nil {
+			return nil, err
+		}
+		areas = append(areas, ar)
+	}
+	return areas, nil
+}

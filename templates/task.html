@@ -1,0 +1,59 @@
+{{define "content"}}
+<div style="max-width: 800px;">
+    <p><a href="/">← Back to inbox</a></p>
+
+    <h1>Task #{{.ID}}</h1>
+
+    <p>
+        <strong>Created:</strong> {{.FormattedCreated}}
+    </p>
+
+    <h2>Edit task</h2>
+    <form action="/task/{{.ID}}" method="post">
+        <label for="task-name">Name</label>
+        <br />
+        <input type="text" id="task-name" name="name" value="{{.Name}}" required style="width: 100%;" />
+        <br /><br />
+
+        <label for="task-status">Status</label>
+        <br />
+        <select id="task-status" name="status" style="width: 100%;">
+            <option value="active" {{if eq .Status "active"}}selected{{end}}>Active</option>
+            <option value="done" {{if eq .Status "done"}}selected{{end}}>Done</option>
+            <option value="canceled" {{if eq .Status "canceled"}}selected{{end}}>Canceled</option>
+        </select>
+        <br /><br />
+
+        <label for="task-priority">Priority</label>
+        <br />
+        <select id="task-priority" name="priority" style="width: 100%;">
+            <option value="0" {{if eq .Priority 0}}selected{{end}}>Low</option>
+            <option value="1" {{if eq .Priority 1}}selected{{end}}>Medium</option>
+            <option value="2" {{if eq .Priority 2}}selected{{end}}>High</option>
+        </select>
+        <br /><br />
+
+        <label for="task-project">Project (optional)</label>
+        <br />
+        <select id="task-project" name="project_id" style="width: 100%;">
+            <option value="">-- None --</option>
+            {{range .Projects}}
+            <option value="{{.ID}}" {{if eq $.ProjectID .ID}}selected{{end}}>{{.Name}}</option>
+            {{end}}
+        </select>
+        <br /><br />
+
+        <label for="task-area">Area (optional)</label>
+        <br />
+        <select id="task-area" name="area_id" style="width: 100%;">
+            <option value="">-- None --</option>
+            {{range .Areas}}
+            <option value="{{.ID}}" {{if eq $.AreaID .ID}}selected{{end}}>{{.Name}}</option>
+            {{end}}
+        </select>
+        <br /><br />
+
+        <button type="submit">Save changes</button>
+    </form>
+</div>
+{{end}}

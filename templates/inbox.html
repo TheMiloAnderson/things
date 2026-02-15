@@ -1,7 +1,59 @@
 {{define "content"}}
-<form method="post">
-    <textarea name="inbox" cols="80" rows="20">{{.}}</textarea>
-    <br />
-    <input type="submit" value="Save">
-</form>
+<div style="display: flex; gap: 24px; align-items: flex-start;">
+    <form method="post" style="flex: 1;">
+        <h2>Inbox</h2>
+        <textarea name="inbox" cols="80" rows="20" style="width: 100%;">{{.Inbox}}</textarea>
+        <br />
+        <input type="submit" value="Save">
+    </form>
+
+    <form action="/task" method="post" style="width: 360px;">
+        <h2>New task</h2>
+
+        <label for="task-name">Name</label>
+        <br />
+        <input type="text" id="task-name" name="name" required style="width: 100%;" />
+        <br /><br />
+
+        <label for="task-status">Status</label>
+        <br />
+        <select id="task-status" name="status" style="width: 100%;">
+            <option value="active" selected>Active</option>
+            <option value="done">Done</option>
+            <option value="canceled">Canceled</option>
+        </select>
+        <br /><br />
+
+        <label for="task-priority">Priority</label>
+        <br />
+        <select id="task-priority" name="priority" style="width: 100%;">
+            <option value="0" selected>Low</option>
+            <option value="1">Medium</option>
+            <option value="2">High</option>
+        </select>
+        <br /><br />
+
+        <label for="task-project">Project (optional)</label>
+        <br />
+        <select id="task-project" name="project_id" style="width: 100%;">
+            <option value="">-- None --</option>
+            {{range .Projects}}
+            <option value="{{.ID}}">{{.Name}}</option>
+            {{end}}
+        </select>
+        <br /><br />
+
+        <label for="task-area">Area (optional)</label>
+        <br />
+        <select id="task-area" name="area_id" style="width: 100%;">
+            <option value="">-- None --</option>
+            {{range .Areas}}
+            <option value="{{.ID}}">{{.Name}}</option>
+            {{end}}
+        </select>
+        <br /><br />
+
+        <button type="submit">Create</button>
+    </form>
+</div>
 {{end}}

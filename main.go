@@ -25,7 +25,7 @@ type PageData struct {
 func loadTemplates() map[string]*template.Template {
 	templates := make(map[string]*template.Template)
 	layout := "templates/layout.html"
-	pages := []string{"inbox.html", "login.html"}
+	pages := []string{"inbox.html", "login.html", "task.html"}
 	for _, page := range pages {
 		templates[page] = template.Must(template.ParseFiles(layout, "templates/"+page))
 	}
@@ -42,10 +42,12 @@ func main() {
 		Store:      store,
 		Templates:  loadTemplates(),
 	}
-	http.HandleFunc("/", AuthRequired(app.inboxHandler))
-
 	http.HandleFunc("/login", app.loginHandler)
 	http.HandleFunc("/logout", app.logoutHandler)
+
+	http.HandleFunc("/", AuthRequired(app.inboxHandler))
+	http.HandleFunc("/task/", AuthRequired(app.taskByIDHandler))
+	http.HandleFunc("/task", AuthRequired(app.taskHandler))
 
 	fmt.Println("Server is starting on port 8888...")
 	log.Fatal(http.ListenAndServe(":8888", nil))

@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"testing"
 )
 
@@ -81,5 +82,35 @@ func TestProjectDelete(t *testing.T) {
 	err := p.GetById(1)
 	if err != sql.ErrNoRows {
 		t.Errorf(`Project Delete - expected ErrNoRows but got: %v`, err)
+	}
+}
+
+func TestProjectAllActiveForUser(t *testing.T) {
+	p := beginProjectTransaction(t)
+	defer p.Rollback()
+
+	// Insert multiple projects for user 1 (active/done/canceled); test_data has one user with id=1
+	for i, status := range []Status{"active", "done", "active", "canceled"} {
+		temp := Project{Connection: p.Connection, Name: fmt.Sprintf("Proj%d", i+1), Status: status, Notes: "", AreaID: 1, UserID: 1}
+		_, err := temp.Save()
+		if err != nil {
+			t.Fatalf("Save failed: %v", err)
+		}
+	}
+	projects, err := p.AllActiveForUser(1)
+	if err != nil {
+		t.Fatalf("AllActiveForUser error: %v", err)
+	}
+	// test_data has 1 active project ("Get amp repaired"), we insert 2 more active (Proj1, Proj3)
+	if len(projects) != 3 {
+		t.Fatalf("Expected 3 active projects, got %d", len(projects))
+	}
+	for _, proj := range projects {
+		if proj.Status != StatusActive {
+			t.Errorf("Inactive project returned: %+v", proj)
+		}
+		if proj.UserID != 1 {
+			t.Errorf("Wrong user project returned: %+v", proj)
+		}
 	}
 }

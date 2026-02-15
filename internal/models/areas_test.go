@@ -78,3 +78,41 @@ func TestAreaDelete(t *testing.T) {
 		t.Errorf(`Area Delete - expected ErrNoRows but got: %v`, err)
 	}
 }
+
+func TestAreaAllForUser(t *testing.T) {
+	a := beginAreaTransaction(t)
+	defer a.Rollback()
+
+	// Insert multiple areas for user 1; test_data has one user with id=1 and one area "Music"
+	areaNames := []string{"Writing", "Cooking", "Fitness"}
+	for _, name := range areaNames {
+		temp := Area{Connection: a.Connection, Name: name, UserID: 1}
+		_, err := temp.Save()
+		if err != nil {
+			t.Fatalf("Save failed: %v", err)
+		}
+	}
+
+	areas, err := a.AllForUser(1)
+	if err != nil {
+		t.Fatalf("AllForUser error: %v", err)
+	}
+	if len(areas) != 4 {
+		t.Fatalf("Expected 4 areas for user 1, got %d", len(areas))
+	}
+	for _, ar := range areas {
+		if ar.UserID != 1 {
+			t.Errorf("Wrong user area returned: %+v", ar)
+		}
+	}
+	// Check our three names are present
+	seen := make(map[string]bool)
+	for _, ar := range areas {
+		seen[ar.Name] = true
+	}
+	for _, name := range areaNames {
+		if !seen[name] {
+			t.Errorf("Expected area %q in results", name)
+		}
+	}
+}
