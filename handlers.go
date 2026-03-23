@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
 	"net/http"
 	"strconv"
@@ -132,13 +133,49 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 	t.AreaID = areaID
 	t.UserID = userID
 
-	id, err := t.Save()
+	_, err = t.Save()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, "/task/"+strconv.FormatInt(id, 10), http.StatusSeeOther)
+	auth, _ := session.Values["authenticated"].(bool)
+	u := models.User{Connection: *a.Connection}
+	if err := u.GetById(userID); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	pr := models.Project{Connection: *a.Connection}
+	projects, err := pr.AllActiveForUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	ar := models.Area{Connection: *a.Connection}
+	areas, err := ar.AllForUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	pageData := PageData{
+		IsAuthenticated: auth,
+		Username:        u.Name,
+		Data: InboxViewModel{
+			Inbox:    u.Inbox,
+			Projects: projects,
+			Areas:    areas,
+		},
+	}
+
+	var buf bytes.Buffer
+	if err := a.Templates["inbox.html"].ExecuteTemplate(&buf, "layout.html", pageData); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	_, _ = w.Write(buf.Bytes())
 }
 
 func (a *App) taskByIDHandler(w http.ResponseWriter, r *http.Request) {
