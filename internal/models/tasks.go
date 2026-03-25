@@ -56,6 +56,38 @@ func (t *Task) GetById(id int) error {
 	return err
 }
 
+// AllActiveForUser returns all active tasks for the given user_id, newest first.
+func (t *Task) AllActiveForUser(userID int) ([]Task, error) {
+	rows, err := t.Query(
+		`SELECT id, name, status, priority, date_created, project_id, area_id, user_id FROM tasks WHERE user_id = ? AND status = ? ORDER BY date_created DESC`,
+		userID, StatusActive,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tasks []Task
+	for rows.Next() {
+		var task Task
+		task.Connection = t.Connection
+		var projectID sql.NullInt64
+		var areaID sql.NullInt64
+		err := rows.Scan(&task.ID, &task.Name, &task.Status, &task.Priority, &task.DateCreated, &projectID, &areaID, &task.UserID)
+		if err != nil {
+			return nil, err
+		}
+		if projectID.Valid {
+			task.ProjectID = int(projectID.Int64)
+		}
+		if areaID.Valid {
+			task.AreaID = int(areaID.Int64)
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks, rows.Err()
+}
+
 func (t *Task) Save() (int64, error) {
 	// TODO figure out the ContextIDs logic
 	var projectID any = t.ProjectID

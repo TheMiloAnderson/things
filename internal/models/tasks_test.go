@@ -94,3 +94,49 @@ func TestTaskDelete(t *testing.T) {
 		t.Errorf(`Task Delete - expected ErrNoRows but got: %v`, err)
 	}
 }
+
+func TestTaskAllActiveForUser(t *testing.T) {
+	task := beginTaskTransaction(t)
+	defer task.Rollback()
+
+	// test_data: user 1 has one active task ("Call Aviator"); add another active and one done
+	t2 := Task{Connection: task.Connection}
+	t2.Name = "Second active"
+	t2.Status = StatusActive
+	t2.Priority = PriorityLow
+	t2.DateCreated = time.Now()
+	t2.ProjectID = 1
+	t2.AreaID = 1
+	t2.UserID = 1
+	if _, err := t2.Save(); err != nil {
+		t.Fatalf("Save active task: %v", err)
+	}
+
+	t3 := Task{Connection: task.Connection}
+	t3.Name = "Done task"
+	t3.Status = StatusDone
+	t3.Priority = PriorityLow
+	t3.DateCreated = time.Now()
+	t3.ProjectID = 1
+	t3.AreaID = 1
+	t3.UserID = 1
+	if _, err := t3.Save(); err != nil {
+		t.Fatalf("Save done task: %v", err)
+	}
+
+	list, err := task.AllActiveForUser(1)
+	if err != nil {
+		t.Fatalf("AllActiveForUser: %v", err)
+	}
+	if len(list) != 2 {
+		t.Fatalf("Expected 2 active tasks for user 1, got %d", len(list))
+	}
+	for _, tk := range list {
+		if tk.Status != StatusActive {
+			t.Errorf("Non-active task in list: %+v", tk)
+		}
+		if tk.UserID != 1 {
+			t.Errorf("Wrong user: %+v", tk)
+		}
+	}
+}

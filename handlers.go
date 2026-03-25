@@ -23,21 +23,33 @@ type TaskViewModel struct {
 	FormattedCreated string
 }
 
+// TasksListViewModel is the data for GET /tasks/ (active tasks only).
+type TasksListViewModel struct {
+	Tasks    []models.Task
+	Projects []models.Project
+	Areas    []models.Area
+}
+
 func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
-	session, _ := a.Store.Get(r, "session-name")
-	auth, _ := session.Values["authenticated"].(bool)
-	userID := session.Values["user_id"].(int)
-	u := models.User{Connection: *a.Connection}
-	u.GetById(userID)
-	
-	// Fetch active projects & all areas for user
-	pr := models.Project{Connection: *a.Connection}
-	projects, _ := pr.AllActiveForUser(userID)
-	ar := models.Area{Connection: *a.Connection}
-	areas, _ := ar.AllForUser(userID)
+	userID := userIDFromRequest(r)
+	u, err := a.Data.GetUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	projects, err := a.Data.AllActiveProjects(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	areas, err := a.Data.AllAreas(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	pageData := PageData{
-		IsAuthenticated: auth,
+		IsAuthenticated: true,
 		Username:        u.Name,
 	}
 	if r.Method == http.MethodGet {
@@ -54,8 +66,12 @@ func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		inboxText := r.FormValue("inbox")
-		u.Inbox = inboxText
-		if err := u.Update(); err != nil {
+		if err := a.Data.UpdateUserInbox(userID, inboxText); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		u, err = a.Data.GetUser(userID)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -70,14 +86,64 @@ func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
 
+func (a *App) tasksListHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/tasks" {
+		http.Redirect(w, r, "/tasks/", http.StatusSeeOther)
+		return
+	}
+	if r.URL.Path != "/tasks/" {
+		http.NotFound(w, r)
+		return
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID := userIDFromRequest(r)
+	u, err := a.Data.GetUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	projects, err := a.Data.AllActiveProjects(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	areas, err := a.Data.AllAreas(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tasks, err := a.Data.AllActiveTasks(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	pageData := PageData{
+		IsAuthenticated: true,
+		Username:        u.Name,
+		Data: TasksListViewModel{
+			Tasks:    tasks,
+			Projects: projects,
+			Areas:    areas,
+		},
+	}
+	if err := a.Templates["tasks_list.html"].ExecuteTemplate(w, "layout.html", pageData); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
 func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	session, _ := a.Store.Get(r, "session-name")
-	userID := session.Values["user_id"].(int)
+	userID := userIDFromRequest(r)
 
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Could not parse form", http.StatusBadRequest)
@@ -124,7 +190,7 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	t := models.Task{Connection: *a.Connection}
+	t := models.Task{}
 	t.Name = name
 	t.Status = status
 	t.Priority = priority
@@ -133,33 +199,30 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 	t.AreaID = areaID
 	t.UserID = userID
 
-	_, err = t.Save()
+	_, err = a.Data.SaveTask(t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	auth, _ := session.Values["authenticated"].(bool)
-	u := models.User{Connection: *a.Connection}
-	if err := u.GetById(userID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	pr := models.Project{Connection: *a.Connection}
-	projects, err := pr.AllActiveForUser(userID)
+	u, err := a.Data.GetUser(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	ar := models.Area{Connection: *a.Connection}
-	areas, err := ar.AllForUser(userID)
+	projects, err := a.Data.AllActiveProjects(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	areas, err := a.Data.AllAreas(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	pageData := PageData{
-		IsAuthenticated: auth,
+		IsAuthenticated: true,
 		Username:        u.Name,
 		Data: InboxViewModel{
 			Inbox:    u.Inbox,
@@ -191,27 +254,33 @@ func (a *App) taskByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, _ := a.Store.Get(r, "session-name")
-	auth, _ := session.Values["authenticated"].(bool)
-	userID := session.Values["user_id"].(int)
-	u := models.User{Connection: *a.Connection}
-	_ = u.GetById(userID)
+	userID := userIDFromRequest(r)
+	u, err := a.Data.GetUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	// Fetch all options for the user
-	pr := models.Project{Connection: *a.Connection}
-	projects, _ := pr.AllActiveForUser(userID)
-	ar := models.Area{Connection: *a.Connection}
-	areas, _ := ar.AllForUser(userID)
+	projects, err := a.Data.AllActiveProjects(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	areas, err := a.Data.AllAreas(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	pageData := PageData{
-		IsAuthenticated: auth,
+		IsAuthenticated: true,
 		Username:        u.Name,
 	}
 
 	switch r.Method {
 	case http.MethodGet:
-		t := models.Task{Connection: *a.Connection}
-		if err := t.GetById(id); err != nil {
+		t, err := a.Data.GetTask(id)
+		if err != nil {
 			if err == sql.ErrNoRows {
 				http.NotFound(w, r)
 				return
@@ -245,8 +314,8 @@ func (a *App) taskByIDHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		t := models.Task{Connection: *a.Connection}
-		if err := t.GetById(id); err != nil {
+		t, err := a.Data.GetTask(id)
+		if err != nil {
 			if err == sql.ErrNoRows {
 				http.NotFound(w, r)
 				return
@@ -296,7 +365,7 @@ func (a *App) taskByIDHandler(w http.ResponseWriter, r *http.Request) {
 		t.ProjectID = projectID
 		t.AreaID = areaID
 
-		if err := t.Update(); err != nil {
+		if err := a.Data.UpdateTask(t); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

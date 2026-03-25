@@ -23,19 +23,6 @@ func getStore() *sessions.CookieStore {
 	return store
 }
 
-func AuthRequired(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		store := getStore()
-		session, _ := store.Get(r, "session-name")
-		auth, ok := session.Values["authenticated"].(bool)
-		if !ok || !auth {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
-		next(w, r)
-	}
-}
-
 func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		pageData := PageData{

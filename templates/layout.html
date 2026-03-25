@@ -8,6 +8,8 @@
         <strong><a href="/">THINGS</a></strong>
         <div>
             {{if .IsAuthenticated}}
+                <a href="/tasks/">Tasks</a>
+                &nbsp;|&nbsp;
                 <a href="/logout">Logout</a>
             {{else}}
                 <a href="/login">Login</a>

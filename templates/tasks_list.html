@@ -1,0 +1,150 @@
+{{define "content"}}
+<div style="max-width: 960px;">
+    <h1>Active tasks</h1>
+
+    {{if not .Tasks}}
+    <p>No active tasks.</p>
+    {{else}}
+
+    {{range .Tasks}}
+    {{$task := .}}
+    <form class="task-form" data-task-id="{{.ID}}" style="border: 1px solid #ccc; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+            <div style="flex: 2; min-width: 200px;">
+                <label for="name-{{.ID}}">Name</label><br />
+                <input type="text" id="name-{{.ID}}" name="name" value="{{.Name}}" required style="width: 100%;" />
+            </div>
+            <div>
+                <label for="status-{{.ID}}">Status</label><br />
+                <select id="status-{{.ID}}" name="status">
+                    <option value="active" {{if eq .Status "active"}}selected{{end}}>Active</option>
+                    <option value="done" {{if eq .Status "done"}}selected{{end}}>Done</option>
+                    <option value="canceled" {{if eq .Status "canceled"}}selected{{end}}>Canceled</option>
+                </select>
+            </div>
+            <div>
+                <label for="priority-{{.ID}}">Priority</label><br />
+                <select id="priority-{{.ID}}" name="priority">
+                    <option value="0" {{if eq .Priority 0}}selected{{end}}>Low</option>
+                    <option value="1" {{if eq .Priority 1}}selected{{end}}>Medium</option>
+                    <option value="2" {{if eq .Priority 2}}selected{{end}}>High</option>
+                </select>
+            </div>
+            <div>
+                <label for="project-{{.ID}}">Project</label><br />
+                <select id="project-{{.ID}}" name="project_id">
+                    <option value="">— None —</option>
+                    {{range $.Projects}}
+                    <option value="{{.ID}}" {{if eq $task.ProjectID .ID}}selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
+            <div>
+                <label for="area-{{.ID}}">Area</label><br />
+                <select id="area-{{.ID}}" name="area_id">
+                    <option value="">— None —</option>
+                    {{range $.Areas}}
+                    <option value="{{.ID}}" {{if eq $task.AreaID .ID}}selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+        <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
+            <button type="button" class="task-btn-update">Update</button>
+            <button type="button" class="task-btn-done">Done</button>
+            <span class="task-msg" style="font-size: 0.9rem;"></span>
+        </div>
+    </form>
+    {{end}}
+    {{end}}
+</div>
+
+<script>
+(function () {
+  function intOrNull(sel) {
+    var v = sel.value;
+    if (v === '' || v === null) return null;
+    var n = parseInt(v, 10);
+    return isNaN(n) ? null : n;
+  }
+
+  function payloadFromForm(form) {
+    return {
+      name: form.querySelector('[name=name]').value.trim(),
+      status: form.querySelector('[name=status]').value,
+      priority: parseInt(form.querySelector('[name=priority]').value, 10) || 0,
+      project_id: intOrNull(form.querySelector('[name=project_id]')),
+      area_id: intOrNull(form.querySelector('[name=area_id]'))
+    };
+  }
+
+  function setMsg(form, text, ok) {
+    var el = form.querySelector('.task-msg');
+    el.textContent = text;
+    el.style.color = ok ? 'green' : 'crimson';
+  }
+
+  document.querySelectorAll('.task-form').forEach(function (form) {
+    var id = form.getAttribute('data-task-id');
+
+    form.querySelector('.task-btn-update').addEventListener('click', function () {
+      var body = payloadFromForm(form);
+      if (!body.name) {
+        setMsg(form, 'Name is required.', false);
+        return;
+      }
+      setMsg(form, 'Saving…', true);
+      fetch('/api/task/' + id + '/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(body)
+      }).then(function (res) {
+        return res.json().then(function (data) {
+          return { res: res, data: data };
+        });
+      }).then(function (x) {
+        if (x.res.ok && x.data.ok) {
+          setMsg(form, 'Saved.', true);
+          if (body.status !== 'active') {
+            form.remove();
+            if (!document.querySelector('.task-form')) {
+              location.reload();
+            }
+          }
+        } else {
+          setMsg(form, (x.data && x.data.error) || 'Update failed.', false);
+        }
+      }).catch(function () {
+        setMsg(form, 'Network error.', false);
+      });
+    });
+
+    form.querySelector('.task-btn-done').addEventListener('click', function () {
+      setMsg(form, 'Marking done…', true);
+      fetch('/api/task/' + id + '/done', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: '{}'
+      }).then(function (res) {
+        return res.json().then(function (data) {
+          return { res: res, data: data };
+        });
+      }).then(function (x) {
+        if (x.res.ok && x.data.ok) {
+          form.remove();
+          if (!document.querySelector('.task-form')) {
+            location.reload();
+          }
+        } else {
+          setMsg(form, (x.data && x.data.error) || 'Could not mark done.', false);
+        }
+      }).catch(function () {
+        setMsg(form, 'Network error.', false);
+      });
+    });
+  });
+})();
+</script>
+{{end}}

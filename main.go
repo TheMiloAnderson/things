@@ -12,6 +12,8 @@ import (
 
 type App struct {
 	Connection *db.Connection
+	Data       HandlerData
+	Auth       Authenticator
 	Store      *sessions.CookieStore
 	Templates  map[string]*template.Template
 }
@@ -25,7 +27,7 @@ type PageData struct {
 func loadTemplates() map[string]*template.Template {
 	templates := make(map[string]*template.Template)
 	layout := "templates/layout.html"
-	pages := []string{"inbox.html", "login.html", "task.html"}
+	pages := []string{"inbox.html", "login.html", "task.html", "tasks_list.html"}
 	for _, page := range pages {
 		templates[page] = template.Must(template.ParseFiles(layout, "templates/"+page))
 	}
@@ -39,15 +41,20 @@ func main() {
 	store := getStore()
 	app := &App{
 		Connection: &dbConn,
+		Data:       &sqlHandlerData{conn: &dbConn},
+		Auth:       &SessionAuthenticator{Store: store},
 		Store:      store,
 		Templates:  loadTemplates(),
 	}
 	http.HandleFunc("/login", app.loginHandler)
 	http.HandleFunc("/logout", app.logoutHandler)
 
-	http.HandleFunc("/", AuthRequired(app.inboxHandler))
-	http.HandleFunc("/task/", AuthRequired(app.taskByIDHandler))
-	http.HandleFunc("/task", AuthRequired(app.taskHandler))
+	http.HandleFunc("/", app.requireAuth(app.inboxHandler))
+	http.HandleFunc("/tasks/", app.requireAuth(app.tasksListHandler))
+	http.HandleFunc("/tasks", app.requireAuth(app.tasksListHandler))
+	http.HandleFunc("/api/task/", app.requireAuth(app.apiTaskHandler))
+	http.HandleFunc("/task/", app.requireAuth(app.taskByIDHandler))
+	http.HandleFunc("/task", app.requireAuth(app.taskHandler))
 
 	fmt.Println("Server is starting on port 8888...")
 	log.Fatal(http.ListenAndServe(":8888", nil))
