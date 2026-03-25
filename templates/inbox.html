@@ -1,59 +1,71 @@
 {{define "content"}}
-<div style="display: flex; gap: 24px; align-items: flex-start;">
-    <form method="post" style="flex: 1;">
-        <h2>Inbox</h2>
-        <textarea name="inbox" cols="80" rows="20" style="width: 100%;">{{.Inbox}}</textarea>
-        <br />
-        <input type="submit" value="Save">
+<div class="flex flex-col xl:flex-row gap-8 xl:gap-10 xl:items-start">
+    <form method="post" class="flex-1 min-w-0 space-y-4">
+        <h2 class="text-xl font-semibold text-cgr-cream">Inbox</h2>
+        <textarea name="inbox" rows="18"
+            class="w-full rounded-lg border border-cgr-border bg-cgr-panel/50 px-3 py-2.5 text-sm text-cgr-cream placeholder-cgr-muted shadow-inner focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage resize-y min-h-[280px]">{{.Inbox}}</textarea>
+        <button type="submit"
+            class="inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2 text-sm font-medium text-cgr-base shadow-sm hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
+            Save
+        </button>
     </form>
 
-    <form action="/task" method="post" style="width: 360px;">
-        <h2>New task</h2>
+    <form action="/task" method="post" class="w-full xl:w-80 shrink-0 space-y-4 rounded-xl border border-cgr-border bg-cgr-panel/40 p-5 shadow-lg shadow-black/40">
+        <h2 class="text-lg font-semibold text-cgr-cream">New task</h2>
 
-        <label for="task-name">Name</label>
-        <br />
-        <input type="text" id="task-name" name="name" required style="width: 100%;" />
-        <br /><br />
+        <div class="space-y-1.5">
+            <label for="task-name" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Name</label>
+            <input type="text" id="task-name" name="name" required
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+        </div>
 
-        <label for="task-status">Status</label>
-        <br />
-        <select id="task-status" name="status" style="width: 100%;">
-            <option value="active" selected>Active</option>
-            <option value="done">Done</option>
-            <option value="canceled">Canceled</option>
-        </select>
-        <br /><br />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+                <label for="task-status" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Status</label>
+                <select id="task-status" name="status"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="active" selected>Active</option>
+                    <option value="done">Done</option>
+                    <option value="canceled">Canceled</option>
+                </select>
+            </div>
+            <div class="space-y-1.5">
+                <label for="task-priority" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Priority</label>
+                <select id="task-priority" name="priority"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="0" selected>Low</option>
+                    <option value="1">Medium</option>
+                    <option value="2">High</option>
+                </select>
+            </div>
+        </div>
 
-        <label for="task-priority">Priority</label>
-        <br />
-        <select id="task-priority" name="priority" style="width: 100%;">
-            <option value="0" selected>Low</option>
-            <option value="1">Medium</option>
-            <option value="2">High</option>
-        </select>
-        <br /><br />
+        <div class="space-y-1.5">
+            <label for="task-project" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Project (optional)</label>
+            <select id="task-project" name="project_id"
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                <option value="">— None —</option>
+                {{range .Projects}}
+                <option value="{{.ID}}">{{.Name}}</option>
+                {{end}}
+            </select>
+        </div>
 
-        <label for="task-project">Project (optional)</label>
-        <br />
-        <select id="task-project" name="project_id" style="width: 100%;">
-            <option value="">-- None --</option>
-            {{range .Projects}}
-            <option value="{{.ID}}">{{.Name}}</option>
-            {{end}}
-        </select>
-        <br /><br />
+        <div class="space-y-1.5">
+            <label for="task-area" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Area (optional)</label>
+            <select id="task-area" name="area_id"
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                <option value="">— None —</option>
+                {{range .Areas}}
+                <option value="{{.ID}}">{{.Name}}</option>
+                {{end}}
+            </select>
+        </div>
 
-        <label for="task-area">Area (optional)</label>
-        <br />
-        <select id="task-area" name="area_id" style="width: 100%;">
-            <option value="">-- None --</option>
-            {{range .Areas}}
-            <option value="{{.ID}}">{{.Name}}</option>
-            {{end}}
-        </select>
-        <br /><br />
-
-        <button type="submit">Create</button>
+        <button type="submit"
+            class="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
+            Create
+        </button>
     </form>
 </div>
 {{end}}

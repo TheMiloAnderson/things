@@ -1,14 +1,21 @@
 {{define "content"}}
-<div class="login-card">
-    <h2>Login</h2>
-    <form action="/login" method="POST">
-        <label for="username">Username</label>
-        <input type="text" name="username" id="username" required autofocus>
-        
-        <label for="password">Password</label>
-        <input type="password" name="password" id="password" required>
-        
-        <button type="submit">Sign In</button>
+<div class="mx-auto max-w-sm rounded-xl border border-cgr-border bg-cgr-panel/50 p-8 shadow-xl shadow-black/40">
+    <h2 class="text-xl font-semibold text-cgr-cream mb-6">Login</h2>
+    <form action="/login" method="POST" class="space-y-5">
+        <div class="space-y-1.5">
+            <label for="username" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Username</label>
+            <input type="text" name="username" id="username" required autofocus
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+        </div>
+        <div class="space-y-1.5">
+            <label for="password" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Password</label>
+            <input type="password" name="password" id="password" required
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+        </div>
+        <button type="submit"
+            class="w-full inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2.5 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
+            Sign in
+        </button>
     </form>
 </div>
 {{end}}

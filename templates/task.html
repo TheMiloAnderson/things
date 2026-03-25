@@ -1,59 +1,73 @@
 {{define "content"}}
-<div style="max-width: 800px;">
-    <p><a href="/">← Back to inbox</a></p>
-
-    <h1>Task #{{.ID}}</h1>
-
+<div class="max-w-2xl space-y-8">
     <p>
-        <strong>Created:</strong> {{.FormattedCreated}}
+        <a href="/" class="text-sm text-cgr-sage hover:text-cgr-cream transition-colors">← Back to inbox</a>
     </p>
 
-    <h2>Edit task</h2>
-    <form action="/task/{{.ID}}" method="post">
-        <label for="task-name">Name</label>
-        <br />
-        <input type="text" id="task-name" name="name" value="{{.Name}}" required style="width: 100%;" />
-        <br /><br />
+    <header class="space-y-1">
+        <h1 class="text-2xl font-semibold text-cgr-cream">Task #{{.ID}}</h1>
+        <p class="text-sm text-cgr-muted">
+            <span class="text-cgr-sage/80">Created:</span> {{.FormattedCreated}}
+        </p>
+    </header>
 
-        <label for="task-status">Status</label>
-        <br />
-        <select id="task-status" name="status" style="width: 100%;">
-            <option value="active" {{if eq .Status "active"}}selected{{end}}>Active</option>
-            <option value="done" {{if eq .Status "done"}}selected{{end}}>Done</option>
-            <option value="canceled" {{if eq .Status "canceled"}}selected{{end}}>Canceled</option>
-        </select>
-        <br /><br />
+    <section class="rounded-xl border border-cgr-border bg-cgr-panel/40 p-6 shadow-lg shadow-black/40">
+        <h2 class="text-lg font-semibold text-cgr-cream mb-5">Edit task</h2>
+        <form action="/task/{{.ID}}" method="post" class="space-y-4">
+            <div class="space-y-1.5">
+                <label for="task-name" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Name</label>
+                <input type="text" id="task-name" name="name" value="{{.Name}}" required
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+            </div>
 
-        <label for="task-priority">Priority</label>
-        <br />
-        <select id="task-priority" name="priority" style="width: 100%;">
-            <option value="0" {{if eq .Priority 0}}selected{{end}}>Low</option>
-            <option value="1" {{if eq .Priority 1}}selected{{end}}>Medium</option>
-            <option value="2" {{if eq .Priority 2}}selected{{end}}>High</option>
-        </select>
-        <br /><br />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label for="task-status" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Status</label>
+                    <select id="task-status" name="status"
+                        class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                        <option value="active" {{if eq .Status "active"}}selected{{end}}>Active</option>
+                        <option value="done" {{if eq .Status "done"}}selected{{end}}>Done</option>
+                        <option value="canceled" {{if eq .Status "canceled"}}selected{{end}}>Canceled</option>
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label for="task-priority" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Priority</label>
+                    <select id="task-priority" name="priority"
+                        class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                        <option value="0" {{if eq .Priority 0}}selected{{end}}>Low</option>
+                        <option value="1" {{if eq .Priority 1}}selected{{end}}>Medium</option>
+                        <option value="2" {{if eq .Priority 2}}selected{{end}}>High</option>
+                    </select>
+                </div>
+            </div>
 
-        <label for="task-project">Project (optional)</label>
-        <br />
-        <select id="task-project" name="project_id" style="width: 100%;">
-            <option value="">-- None --</option>
-            {{range .Projects}}
-            <option value="{{.ID}}" {{if eq $.ProjectID .ID}}selected{{end}}>{{.Name}}</option>
-            {{end}}
-        </select>
-        <br /><br />
+            <div class="space-y-1.5">
+                <label for="task-project" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Project (optional)</label>
+                <select id="task-project" name="project_id"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="">— None —</option>
+                    {{range .Projects}}
+                    <option value="{{.ID}}" {{if eq $.ProjectID .ID}}selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
 
-        <label for="task-area">Area (optional)</label>
-        <br />
-        <select id="task-area" name="area_id" style="width: 100%;">
-            <option value="">-- None --</option>
-            {{range .Areas}}
-            <option value="{{.ID}}" {{if eq $.AreaID .ID}}selected{{end}}>{{.Name}}</option>
-            {{end}}
-        </select>
-        <br /><br />
+            <div class="space-y-1.5">
+                <label for="task-area" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Area (optional)</label>
+                <select id="task-area" name="area_id"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="">— None —</option>
+                    {{range .Areas}}
+                    <option value="{{.ID}}" {{if eq $.AreaID .ID}}selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
 
-        <button type="submit">Save changes</button>
-    </form>
+            <button type="submit"
+                class="inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
+                Save changes
+            </button>
+        </form>
+    </section>
 </div>
 {{end}}

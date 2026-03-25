@@ -1,47 +1,55 @@
 {{define "content"}}
-<div style="max-width: 960px;">
-    <h1>Active tasks</h1>
+<div class="max-w-5xl space-y-6">
+    <header class="space-y-1">
+        <h1 class="text-2xl font-semibold text-cgr-cream">Active tasks</h1>
+        <p class="text-sm text-cgr-muted">Edit tasks below. Changes save without leaving this page.</p>
+    </header>
 
     {{if not .Tasks}}
-    <p>No active tasks.</p>
+    <p class="text-cgr-muted text-sm rounded-lg border border-dashed border-cgr-border bg-cgr-panel/30 px-4 py-8 text-center">No active tasks.</p>
     {{else}}
 
     {{range .Tasks}}
     {{$task := .}}
-    <form class="task-form" data-task-id="{{.ID}}" style="border: 1px solid #ccc; padding: 16px; margin-bottom: 16px; border-radius: 6px;">
-        <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
-            <div style="flex: 2; min-width: 200px;">
-                <label for="name-{{.ID}}">Name</label><br />
-                <input type="text" id="name-{{.ID}}" name="name" value="{{.Name}}" required style="width: 100%;" />
+    <form class="task-form rounded-xl border border-cgr-border bg-cgr-panel/40 p-5 shadow-md shadow-black/40" data-task-id="{{.ID}}">
+        <div class="flex flex-wrap gap-4 items-end">
+            <div class="flex-[2] min-w-[200px] space-y-1.5">
+                <label for="name-{{.ID}}" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Name</label>
+                <input type="text" id="name-{{.ID}}" name="name" value="{{.Name}}" required
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
             </div>
-            <div>
-                <label for="status-{{.ID}}">Status</label><br />
-                <select id="status-{{.ID}}" name="status">
+            <div class="space-y-1.5 min-w-[120px]">
+                <label for="status-{{.ID}}" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Status</label>
+                <select id="status-{{.ID}}" name="status"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
                     <option value="active" {{if eq .Status "active"}}selected{{end}}>Active</option>
                     <option value="done" {{if eq .Status "done"}}selected{{end}}>Done</option>
                     <option value="canceled" {{if eq .Status "canceled"}}selected{{end}}>Canceled</option>
                 </select>
             </div>
-            <div>
-                <label for="priority-{{.ID}}">Priority</label><br />
-                <select id="priority-{{.ID}}" name="priority">
+            <div class="space-y-1.5 min-w-[110px]">
+                <label for="priority-{{.ID}}" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Priority</label>
+                <select id="priority-{{.ID}}" name="priority"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
                     <option value="0" {{if eq .Priority 0}}selected{{end}}>Low</option>
                     <option value="1" {{if eq .Priority 1}}selected{{end}}>Medium</option>
                     <option value="2" {{if eq .Priority 2}}selected{{end}}>High</option>
                 </select>
             </div>
-            <div>
-                <label for="project-{{.ID}}">Project</label><br />
-                <select id="project-{{.ID}}" name="project_id">
+            <div class="space-y-1.5 min-w-[140px] flex-1">
+                <label for="project-{{.ID}}" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Project</label>
+                <select id="project-{{.ID}}" name="project_id"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
                     <option value="">— None —</option>
                     {{range $.Projects}}
                     <option value="{{.ID}}" {{if eq $task.ProjectID .ID}}selected{{end}}>{{.Name}}</option>
                     {{end}}
                 </select>
             </div>
-            <div>
-                <label for="area-{{.ID}}">Area</label><br />
-                <select id="area-{{.ID}}" name="area_id">
+            <div class="space-y-1.5 min-w-[140px] flex-1">
+                <label for="area-{{.ID}}" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Area</label>
+                <select id="area-{{.ID}}" name="area_id"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
                     <option value="">— None —</option>
                     {{range $.Areas}}
                     <option value="{{.ID}}" {{if eq $task.AreaID .ID}}selected{{end}}>{{.Name}}</option>
@@ -49,10 +57,14 @@
                 </select>
             </div>
         </div>
-        <div style="margin-top: 12px; display: flex; gap: 8px; align-items: center;">
-            <button type="button" class="task-btn-update">Update</button>
-            <button type="button" class="task-btn-done">Done</button>
-            <span class="task-msg" style="font-size: 0.9rem;"></span>
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button type="button" class="task-btn-update inline-flex items-center justify-center rounded-lg bg-cgr-sage px-3 py-1.5 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
+                Update
+            </button>
+            <button type="button" class="task-btn-done inline-flex items-center justify-center rounded-lg border border-cgr-border bg-cgr-panel/50 px-3 py-1.5 text-sm font-medium text-cgr-cream hover:bg-cgr-panel hover:border-cgr-coral/50 focus:outline-none focus:ring-2 focus:ring-cgr-coral focus:ring-offset-2 focus:ring-offset-cgr-base transition-colors">
+                Done
+            </button>
+            <span class="task-msg text-sm text-cgr-muted"></span>
         </div>
     </form>
     {{end}}
@@ -81,7 +93,10 @@
   function setMsg(form, text, ok) {
     var el = form.querySelector('.task-msg');
     el.textContent = text;
-    el.style.color = ok ? 'green' : 'crimson';
+    el.classList.remove('text-cgr-sage', 'text-cgr-rose', 'text-cgr-muted');
+    if (ok === true) el.classList.add('text-cgr-sage');
+    else if (ok === false) el.classList.add('text-cgr-rose');
+    else el.classList.add('text-cgr-muted');
   }
 
   document.querySelectorAll('.task-form').forEach(function (form) {
@@ -93,7 +108,7 @@
         setMsg(form, 'Name is required.', false);
         return;
       }
-      setMsg(form, 'Saving…', true);
+      setMsg(form, 'Saving…');
       fetch('/api/task/' + id + '/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,7 +136,7 @@
     });
 
     form.querySelector('.task-btn-done').addEventListener('click', function () {
-      setMsg(form, 'Marking done…', true);
+      setMsg(form, 'Marking done…');
       fetch('/api/task/' + id + '/done', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
