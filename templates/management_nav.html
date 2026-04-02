@@ -1,0 +1,10 @@
+{{define "management_nav"}}
+<nav class="flex flex-wrap gap-x-6 gap-y-2 mb-8 pb-4 border-b border-cgr-border text-sm font-medium">
+    <a href="/management/projects/"
+        class="transition-colors {{if eq .Section "projects"}}text-cgr-cream border-b-2 border-cgr-sage -mb-[17px] pb-4{{else}}text-cgr-sage hover:text-cgr-cream{{end}}">Projects</a>
+    <a href="/management/areas/"
+        class="transition-colors {{if eq .Section "areas"}}text-cgr-cream border-b-2 border-cgr-sage -mb-[17px] pb-4{{else}}text-cgr-sage hover:text-cgr-cream{{end}}">Areas</a>
+    <a href="/management/contexts/"
+        class="transition-colors {{if eq .Section "contexts"}}text-cgr-cream border-b-2 border-cgr-sage -mb-[17px] pb-4{{else}}text-cgr-sage hover:text-cgr-cream{{end}}">Contexts</a>
+</nav>
+{{end}}

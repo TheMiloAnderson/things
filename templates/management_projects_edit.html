@@ -1,0 +1,132 @@
+{{define "content"}}
+{{template "management_nav" .}}
+<div class="space-y-8">
+    <p>
+        <a href="/management/projects/" class="text-sm text-cgr-sage hover:text-cgr-cream transition-colors">← All projects</a>
+    </p>
+
+    <div class="flex flex-col xl:flex-row gap-8 xl:gap-10 xl:items-start">
+        <div class="flex-1 min-w-0 space-y-6">
+            <h1 class="text-2xl font-semibold text-cgr-cream">Edit project</h1>
+
+            <form id="project-edit-form" method="post" action="/management/projects/{{.Project.ID}}"
+                class="space-y-4 rounded-xl border border-cgr-border bg-cgr-panel/40 p-6">
+                <div class="space-y-1.5">
+                    <label for="name" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Name</label>
+                    <input type="text" id="name" name="name" value="{{.Project.Name}}" required
+                        class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+                </div>
+                <div class="space-y-1.5">
+                    <label for="status" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Status</label>
+                    <select id="status" name="status"
+                        class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                        <option value="active" {{if eq .Project.Status "active"}}selected{{end}}>Active</option>
+                        <option value="done" {{if eq .Project.Status "done"}}selected{{end}}>Done</option>
+                        <option value="canceled" {{if eq .Project.Status "canceled"}}selected{{end}}>Canceled</option>
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label for="area_id" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Area</label>
+                    <select id="area_id" name="area_id"
+                        class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                        <option value="">— None —</option>
+                        {{range .Areas}}
+                        <option value="{{.ID}}" {{if eq $.Project.AreaID .ID}}selected{{end}}>{{.Name}}</option>
+                        {{end}}
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label for="notes" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Notes</label>
+                    <textarea id="notes" name="notes" rows="5"
+                        class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">{{.Project.Notes}}</textarea>
+                </div>
+                <div class="flex flex-wrap gap-3 pt-2">
+                    <button type="submit"
+                        class="inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">Edit</button>
+                    <button type="button" id="project-delete-btn"
+                        class="inline-flex items-center justify-center rounded-lg border border-cgr-rose/50 bg-transparent px-4 py-2 text-sm font-medium text-cgr-rose hover:bg-cgr-rose/10 focus:outline-none focus:ring-2 focus:ring-cgr-rose focus:ring-offset-2 focus:ring-offset-cgr-base transition-colors">Delete</button>
+                    <span id="project-edit-msg" class="self-center text-sm text-cgr-muted"></span>
+                </div>
+            </form>
+        </div>
+
+        <form action="/task" method="post" class="w-full xl:w-80 shrink-0 space-y-4 rounded-xl border border-cgr-border bg-cgr-panel/40 p-5 shadow-lg shadow-black/40">
+            <h2 class="text-lg font-semibold text-cgr-cream">New task</h2>
+            <p class="text-xs text-cgr-muted">Task will be added to <span class="text-cgr-cream font-medium">{{.Project.Name}}</span>.</p>
+            <input type="hidden" name="project_id" value="{{.Project.ID}}" />
+            <input type="hidden" name="return_to" value="/management/projects/{{.Project.ID}}" />
+
+            <div class="space-y-1.5">
+                <label for="task-name" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Name</label>
+                <input type="text" id="task-name" name="name" required
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                    <label for="task-status" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Status</label>
+                    <select id="task-status" name="status"
+                        class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                        <option value="active" selected>Active</option>
+                        <option value="done">Done</option>
+                        <option value="canceled">Canceled</option>
+                    </select>
+                </div>
+                <div class="space-y-1.5">
+                    <label for="task-priority" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Priority</label>
+                    <select id="task-priority" name="priority"
+                        class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                        <option value="0" selected>Low</option>
+                        <option value="1">Medium</option>
+                        <option value="2">High</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label for="task-area" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Area (optional)</label>
+                <select id="task-area" name="area_id"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="">— None —</option>
+                    {{range .Areas}}
+                    <option value="{{.ID}}">{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
+
+            <button type="submit"
+                class="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
+                Create
+            </button>
+        </form>
+    </div>
+</div>
+<script>
+(function () {
+  var id = {{.Project.ID}};
+  var msg = document.getElementById('project-edit-msg');
+  document.getElementById('project-delete-btn').addEventListener('click', function () {
+    if (!confirm('Delete this project? Tasks may lose their project link.')) return;
+    msg.textContent = 'Deleting…';
+    msg.className = 'self-center text-sm text-cgr-muted';
+    fetch('/api/project/' + id + '/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: '{}'
+    }).then(function (res) { return res.json().then(function (data) { return { res: res, data: data }; }); })
+      .then(function (x) {
+        if (x.res.ok && x.data.ok) {
+          window.location.href = '/management/projects/';
+        } else {
+          msg.textContent = (x.data && x.data.error) || 'Delete failed.';
+          msg.className = 'self-center text-sm text-cgr-rose';
+        }
+      }).catch(function () {
+        msg.textContent = 'Network error.';
+        msg.className = 'self-center text-sm text-cgr-rose';
+      });
+  });
+})();
+</script>
+{{end}}

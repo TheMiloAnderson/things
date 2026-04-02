@@ -40,6 +40,11 @@ type fakeHandlerData struct {
 
 	LastUpdateTask models.Task
 	UpdateCount    int
+
+	ProjectsByID map[int]models.Project
+	AreasByID    map[int]models.Area
+	Contexts     []models.Context
+	ContextsByID map[int]models.Context
 }
 
 func (f *fakeHandlerData) GetUser(userID int) (models.User, error) {
@@ -116,6 +121,91 @@ func (f *fakeHandlerData) UpdateTask(t models.Task) error {
 	if f.TasksByID != nil {
 		f.TasksByID[t.ID] = t
 	}
+	return nil
+}
+
+func (f *fakeHandlerData) AllProjectsForUser(userID int) ([]models.Project, error) {
+	if f.ProjectsErr != nil {
+		return nil, f.ProjectsErr
+	}
+	_ = userID
+	return f.Projects, nil
+}
+
+func (f *fakeHandlerData) GetProject(id int) (models.Project, error) {
+	if f.ProjectsByID == nil {
+		return models.Project{}, sql.ErrNoRows
+	}
+	p, ok := f.ProjectsByID[id]
+	if !ok {
+		return models.Project{}, sql.ErrNoRows
+	}
+	return p, nil
+}
+
+func (f *fakeHandlerData) SaveProject(models.Project) (int64, error) {
+	return 1, nil
+}
+
+func (f *fakeHandlerData) UpdateProject(models.Project) error {
+	return nil
+}
+
+func (f *fakeHandlerData) DeleteProjectForUser(int, int) error {
+	return nil
+}
+
+func (f *fakeHandlerData) GetArea(id int) (models.Area, error) {
+	if f.AreasByID == nil {
+		return models.Area{}, sql.ErrNoRows
+	}
+	a, ok := f.AreasByID[id]
+	if !ok {
+		return models.Area{}, sql.ErrNoRows
+	}
+	return a, nil
+}
+
+func (f *fakeHandlerData) SaveArea(models.Area) (int64, error) {
+	return 1, nil
+}
+
+func (f *fakeHandlerData) UpdateArea(models.Area) error {
+	return nil
+}
+
+func (f *fakeHandlerData) DeleteAreaForUser(int, int) error {
+	return nil
+}
+
+func (f *fakeHandlerData) AllContextsForUser(userID int) ([]models.Context, error) {
+	_ = userID
+	if f.Contexts != nil {
+		return f.Contexts, nil
+	}
+	return nil, nil
+}
+
+func (f *fakeHandlerData) GetContext(id int) (models.Context, error) {
+	if f.ContextsByID == nil {
+		return models.Context{}, sql.ErrNoRows
+	}
+	c, ok := f.ContextsByID[id]
+	if !ok {
+		return models.Context{}, sql.ErrNoRows
+	}
+	return c, nil
+}
+
+func (f *fakeHandlerData) SaveContext(models.Context) (int64, error) {
+	return 1, nil
+}
+
+func (f *fakeHandlerData) UpdateContext(models.Context) error {
+	return nil
+}
+
+func (f *fakeHandlerData) DeleteContextForUser(int, int) error {
 	return nil
 }
 

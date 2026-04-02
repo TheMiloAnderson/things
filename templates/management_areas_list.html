@@ -1,0 +1,77 @@
+{{define "content"}}
+{{template "management_nav" .}}
+<div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <h1 class="text-2xl font-semibold text-cgr-cream">Areas</h1>
+        <a href="/management/areas/new"
+            class="inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
+            Create new
+        </a>
+    </div>
+
+    {{if not .Areas}}
+    <p class="text-cgr-muted text-sm rounded-lg border border-dashed border-cgr-border bg-cgr-panel/30 px-4 py-8 text-center">No areas yet.</p>
+    {{else}}
+    {{range .Areas}}
+    <form class="mgmt-area-form rounded-xl border border-cgr-border bg-cgr-panel/40 p-5 shadow-md shadow-black/40" data-id="{{.ID}}">
+        <div class="space-y-1.5 max-w-xl">
+            <label class="block text-xs font-medium uppercase tracking-wide text-cgr-muted" for="aname-{{.ID}}">Name</label>
+            <input type="text" id="aname-{{.ID}}" name="name" value="{{.Name}}" required
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button type="button" class="mgmt-a-update inline-flex items-center justify-center rounded-lg bg-cgr-sage px-3 py-1.5 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">Update</button>
+            <button type="button" class="mgmt-a-delete inline-flex items-center justify-center rounded-lg border border-cgr-rose/50 bg-transparent px-3 py-1.5 text-sm font-medium text-cgr-rose hover:bg-cgr-rose/10 focus:outline-none focus:ring-2 focus:ring-cgr-rose focus:ring-offset-2 focus:ring-offset-cgr-base transition-colors">Delete</button>
+            <span class="mgmt-a-msg text-sm text-cgr-muted"></span>
+        </div>
+    </form>
+    {{end}}
+    {{end}}
+</div>
+<script>
+(function () {
+  function setMsg(form, text, ok) {
+    var el = form.querySelector('.mgmt-a-msg');
+    el.textContent = text;
+    el.classList.remove('text-cgr-sage', 'text-cgr-rose', 'text-cgr-muted');
+    if (ok === true) el.classList.add('text-cgr-sage');
+    else if (ok === false) el.classList.add('text-cgr-rose');
+    else el.classList.add('text-cgr-muted');
+  }
+  document.querySelectorAll('.mgmt-area-form').forEach(function (form) {
+    var id = form.getAttribute('data-id');
+    form.querySelector('.mgmt-a-update').addEventListener('click', function () {
+      var name = form.querySelector('[name=name]').value.trim();
+      if (!name) { setMsg(form, 'Name is required.', false); return; }
+      setMsg(form, 'Saving…');
+      fetch('/api/area/' + id + '/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ name: name })
+      }).then(function (res) { return res.json().then(function (data) { return { res: res, data: data }; }); })
+        .then(function (x) {
+          if (x.res.ok && x.data.ok) setMsg(form, 'Saved.', true);
+          else setMsg(form, (x.data && x.data.error) || 'Update failed.', false);
+        }).catch(function () { setMsg(form, 'Network error.', false); });
+    });
+    form.querySelector('.mgmt-a-delete').addEventListener('click', function () {
+      if (!confirm('Delete this area?')) return;
+      setMsg(form, 'Deleting…');
+      fetch('/api/area/' + id + '/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: '{}'
+      }).then(function (res) { return res.json().then(function (data) { return { res: res, data: data }; }); })
+        .then(function (x) {
+          if (x.res.ok && x.data.ok) {
+            form.remove();
+            if (!document.querySelector('.mgmt-area-form')) location.reload();
+          } else setMsg(form, (x.data && x.data.error) || 'Delete failed.', false);
+        }).catch(function () { setMsg(form, 'Network error.', false); });
+    });
+  });
+})();
+</script>
+{{end}}

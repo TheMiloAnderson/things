@@ -41,3 +41,21 @@ func (c *Context) Delete() error {
 	_, err := c.Exec(`DELETE FROM contexts WHERE id = ?`, c.ID)
 	return err
 }
+
+// AllForUser returns all contexts for the user, ordered by name.
+func (c *Context) AllForUser(userID int) ([]Context, error) {
+	rows, err := c.Query(`SELECT id, name, user_id FROM contexts WHERE user_id = ? ORDER BY name ASC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var contexts []Context
+	for rows.Next() {
+		var ctx Context
+		if err := rows.Scan(&ctx.ID, &ctx.Name, &ctx.UserID); err != nil {
+			return nil, err
+		}
+		contexts = append(contexts, ctx)
+	}
+	return contexts, rows.Err()
+}

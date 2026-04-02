@@ -79,3 +79,36 @@ func TestContextDelete(t *testing.T) {
 		t.Errorf(`Context Delete - expected ErrNoRows but got: %v`, err)
 	}
 }
+
+func TestContextAllForUser(t *testing.T) {
+	c := beginContextTransaction(t)
+	defer c.Rollback()
+
+	ctx := Context{Connection: c.Connection}
+	ctx.Name = "Zebra context"
+	ctx.UserID = 1
+	if _, err := ctx.Save(); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	list, err := c.AllForUser(1)
+	if err != nil {
+		t.Fatalf("AllForUser: %v", err)
+	}
+	// test_data has 2 contexts + 1 inserted
+	if len(list) < 3 {
+		t.Fatalf("Expected at least 3 contexts, got %d", len(list))
+	}
+	var seen bool
+	for _, x := range list {
+		if x.Name == "Zebra context" {
+			seen = true
+		}
+		if x.UserID != 1 {
+			t.Errorf("wrong user: %+v", x)
+		}
+	}
+	if !seen {
+		t.Fatal("new context missing from AllForUser")
+	}
+}

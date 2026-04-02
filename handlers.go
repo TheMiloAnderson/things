@@ -10,6 +10,24 @@ import (
 	"time"
 )
 
+// safeManagementProjectReturnPath allows redirect back to a project edit page only (no open redirects).
+func safeManagementProjectReturnPath(s string) string {
+	s = strings.TrimSpace(s)
+	if !strings.HasPrefix(s, "/management/projects/") {
+		return ""
+	}
+	rest := strings.TrimPrefix(s, "/management/projects/")
+	rest = strings.Trim(rest, "/")
+	if rest == "" || strings.Contains(rest, "/") {
+		return ""
+	}
+	id, err := strconv.Atoi(rest)
+	if err != nil || id <= 0 {
+		return ""
+	}
+	return "/management/projects/" + strconv.Itoa(id)
+}
+
 type InboxViewModel struct {
 	Inbox           string
 	Projects        []models.Project
@@ -202,6 +220,11 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = a.Data.SaveTask(t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if ret := safeManagementProjectReturnPath(r.FormValue("return_to")); ret != "" {
+		http.Redirect(w, r, ret, http.StatusSeeOther)
 		return
 	}
 

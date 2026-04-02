@@ -1,0 +1,27 @@
+{{define "content"}}
+{{template "management_nav" .}}
+<div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <h1 class="text-2xl font-semibold text-cgr-cream">Projects</h1>
+        <a href="/management/projects/new"
+            class="inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
+            Create new
+        </a>
+    </div>
+
+    {{if not .Projects}}
+    <p class="text-cgr-muted text-sm rounded-lg border border-dashed border-cgr-border bg-cgr-panel/30 px-4 py-8 text-center">No projects yet.</p>
+    {{else}}
+    <ul class="divide-y divide-cgr-border rounded-xl border border-cgr-border bg-cgr-panel/30 overflow-hidden">
+        {{range .Projects}}
+        <li>
+            <a href="/management/projects/{{.ID}}"
+                class="block px-4 py-3 text-cgr-cream hover:bg-cgr-panel/50 transition-colors">
+                {{.Name}}
+            </a>
+        </li>
+        {{end}}
+    </ul>
+    {{end}}
+</div>
+{{end}}

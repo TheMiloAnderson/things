@@ -114,3 +114,39 @@ func TestProjectAllActiveForUser(t *testing.T) {
 		}
 	}
 }
+
+func TestProjectAllForUser(t *testing.T) {
+	p := beginProjectTransaction(t)
+	defer p.Rollback()
+
+	// Insert a done project for user 1; test_data already has one active
+	pj := Project{Connection: p.Connection}
+	pj.Name = "Archived thing"
+	pj.Status = StatusDone
+	pj.Notes = ""
+	pj.AreaID = 1
+	pj.UserID = 1
+	if _, err := pj.Save(); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	all, err := p.AllForUser(1)
+	if err != nil {
+		t.Fatalf("AllForUser: %v", err)
+	}
+	if len(all) < 2 {
+		t.Fatalf("Expected at least 2 projects for user 1, got %d", len(all))
+	}
+	var seenDone bool
+	for _, pr := range all {
+		if pr.UserID != 1 {
+			t.Errorf("wrong user: %+v", pr)
+		}
+		if pr.Status == StatusDone && pr.Name == "Archived thing" {
+			seenDone = true
+		}
+	}
+	if !seenDone {
+		t.Fatal("done project not in AllForUser results")
+	}
+}

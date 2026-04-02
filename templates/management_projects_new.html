@@ -1,0 +1,43 @@
+{{define "content"}}
+{{template "management_nav" .}}
+<div class="max-w-2xl space-y-6">
+    <h1 class="text-2xl font-semibold text-cgr-cream">New project</h1>
+    <form method="post" action="/management/projects/" class="space-y-4 rounded-xl border border-cgr-border bg-cgr-panel/40 p-6">
+        <div class="space-y-1.5">
+            <label for="name" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Name</label>
+            <input type="text" id="name" name="name" required
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+        </div>
+        <div class="space-y-1.5">
+            <label for="status" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Status</label>
+            <select id="status" name="status"
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                <option value="active" selected>Active</option>
+                <option value="done">Done</option>
+                <option value="canceled">Canceled</option>
+            </select>
+        </div>
+        <div class="space-y-1.5">
+            <label for="area_id" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Area</label>
+            <select id="area_id" name="area_id"
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                <option value="">— None —</option>
+                {{range .Areas}}
+                <option value="{{.ID}}">{{.Name}}</option>
+                {{end}}
+            </select>
+        </div>
+        <div class="space-y-1.5">
+            <label for="notes" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Notes</label>
+            <textarea id="notes" name="notes" rows="4"
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage"></textarea>
+        </div>
+        <div class="flex flex-wrap gap-3 pt-2">
+            <button type="submit"
+                class="inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">Save</button>
+            <a href="/management/projects/"
+                class="inline-flex items-center justify-center rounded-lg border border-cgr-border bg-cgr-panel/50 px-4 py-2 text-sm font-medium text-cgr-cream hover:bg-cgr-panel transition-colors">Cancel</a>
+        </div>
+    </form>
+</div>
+{{end}}
