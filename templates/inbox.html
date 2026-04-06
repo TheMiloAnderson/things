@@ -1,61 +1,54 @@
 {{define "content"}}
-<div class="flex flex-col xl:flex-row gap-8 xl:gap-10 xl:items-start">
-    <form method="post" class="flex-1 min-w-0 space-y-4">
-        <h2 class="text-xl font-semibold text-cgr-cream">Inbox</h2>
+<div class="flex flex-col xl:flex-row gap-6 xl:gap-8 xl:items-start">
+    <form method="post" class="flex-1 min-w-0 space-y-3">
+        <h2 class="text-xl font-semibold">Inbox</h2>
         <textarea name="inbox" rows="18"
-            class="w-full rounded-lg border border-cgr-border bg-cgr-panel/50 px-3 py-2.5 text-sm text-cgr-cream placeholder-cgr-muted shadow-inner focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage resize-y min-h-[280px]">{{.Inbox}}</textarea>
+            class="w-full rounded-md border border-cgr-border bg-cgr-panel/50 px-3 py-2 text-sm text-white placeholder-gray-500 shadow-inner focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage resize-y min-h-[280px]">{{.Inbox}}</textarea>
         <button type="submit"
-            class="inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2 text-sm font-medium text-cgr-base shadow-sm hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
+            class="rounded-md bg-cgr-sage px-3 py-1.5 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
             Save
         </button>
     </form>
 
-    <form action="/task" method="post" class="w-full xl:w-80 shrink-0 space-y-4 rounded-xl border border-cgr-border bg-cgr-panel/40 p-5 shadow-lg shadow-black/40">
-        <h2 class="text-lg font-semibold text-cgr-cream">New task</h2>
+    <form action="/task" method="post" class="w-full xl:w-72 shrink-0 space-y-3 rounded-lg border border-cgr-border bg-cgr-panel/40 p-4">
+        <h2 class="text-sm font-semibold">New task</h2>
 
-        <div class="space-y-1.5">
-            <label for="task-name" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Name</label>
-            <input type="text" id="task-name" name="name" required
-                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+        <div>
+            <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1 block">Name</span>
+            <input type="text" name="name" required
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-2 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="space-y-1.5">
-                <label for="task-status" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Status</label>
-                <select id="task-status" name="status"
-                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
-                    <option value="active" selected>Active</option>
-                    <option value="done">Done</option>
-                    <option value="canceled">Canceled</option>
-                </select>
-            </div>
-            <div class="space-y-1.5">
-                <label for="task-priority" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Priority</label>
-                <select id="task-priority" name="priority"
-                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
-                    <option value="0" selected>Low</option>
-                    <option value="1">Medium</option>
-                    <option value="2">High</option>
-                </select>
-            </div>
+        <div class="grid grid-cols-2 gap-x-2">
+            <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Status</span>
+            <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Priority</span>
+            <select name="status"
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                <option value="active" selected>Active</option>
+                <option value="done">Done</option>
+                <option value="canceled">Canceled</option>
+            </select>
+            <select name="priority"
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                <option value="0" selected>Low</option>
+                <option value="1">Medium</option>
+                <option value="2">High</option>
+            </select>
         </div>
 
-        <div class="space-y-1.5">
-            <label for="task-project" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Project (optional)</label>
-            <select id="task-project" name="project_id"
-                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
-                <option value="">— None —</option>
+        <div class="grid grid-cols-2 gap-x-2">
+            <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Project</span>
+            <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Area</span>
+            <select name="project_id"
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                <option value="">&mdash;</option>
                 {{range .Projects}}
                 <option value="{{.ID}}">{{.Name}}</option>
                 {{end}}
             </select>
-        </div>
-
-        <div class="space-y-1.5">
-            <label for="task-area" class="block text-xs font-medium uppercase tracking-wide text-cgr-muted">Area (optional)</label>
-            <select id="task-area" name="area_id"
-                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-3 py-2 text-sm text-cgr-cream focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
-                <option value="">— None —</option>
+            <select name="area_id"
+                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                <option value="">&mdash;</option>
                 {{range .Areas}}
                 <option value="{{.ID}}">{{.Name}}</option>
                 {{end}}
@@ -63,7 +56,7 @@
         </div>
 
         <button type="submit"
-            class="w-full sm:w-auto inline-flex items-center justify-center rounded-lg bg-cgr-sage px-4 py-2 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
+            class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110 transition-[filter]">
             Create
         </button>
     </form>

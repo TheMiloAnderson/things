@@ -1,10 +1,10 @@
 {{define "management_nav"}}
-<nav class="flex flex-wrap gap-x-6 gap-y-2 mb-8 pb-4 border-b border-cgr-border text-sm font-medium">
+<nav class="flex flex-wrap gap-x-6 gap-y-2 mb-5 pb-3 border-b border-cgr-border text-sm font-medium">
     <a href="/management/projects/"
-        class="transition-colors {{if eq .Section "projects"}}text-cgr-cream border-b-2 border-cgr-sage -mb-[17px] pb-4{{else}}text-cgr-sage hover:text-cgr-cream{{end}}">Projects</a>
+        class="transition-colors {{if eq .Section "projects"}}text-white border-b-2 border-cgr-sage -mb-[13px] pb-3{{else}}hover:text-cgr-sage{{end}}">Projects</a>
     <a href="/management/areas/"
-        class="transition-colors {{if eq .Section "areas"}}text-cgr-cream border-b-2 border-cgr-sage -mb-[17px] pb-4{{else}}text-cgr-sage hover:text-cgr-cream{{end}}">Areas</a>
+        class="transition-colors {{if eq .Section "areas"}}text-white border-b-2 border-cgr-sage -mb-[13px] pb-3{{else}}hover:text-cgr-sage{{end}}">Areas</a>
     <a href="/management/contexts/"
-        class="transition-colors {{if eq .Section "contexts"}}text-cgr-cream border-b-2 border-cgr-sage -mb-[17px] pb-4{{else}}text-cgr-sage hover:text-cgr-cream{{end}}">Contexts</a>
+        class="transition-colors {{if eq .Section "contexts"}}text-white border-b-2 border-cgr-sage -mb-[13px] pb-3{{else}}hover:text-cgr-sage{{end}}">Contexts</a>
 </nav>
 {{end}}
