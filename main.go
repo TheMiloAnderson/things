@@ -34,8 +34,13 @@ func loadTemplates() map[string]*template.Template {
 		"management_areas_list.html", "management_areas_new.html",
 		"management_contexts_list.html", "management_contexts_new.html",
 	}
+	taskForms := "templates/task_forms_snippet.html"
 	for _, page := range pages {
-		templates[page] = template.Must(template.ParseFiles(layout, nav, "templates/"+page))
+		files := []string{layout, nav, "templates/" + page}
+		if page == "tasks_list.html" || page == "management_projects_edit.html" {
+			files = append(files, taskForms)
+		}
+		templates[page] = template.Must(template.ParseFiles(files...))
 	}
 
 	return templates
@@ -56,6 +61,7 @@ func main() {
 	http.HandleFunc("/logout", app.logoutHandler)
 
 	http.HandleFunc("/", app.requireAuth(app.inboxHandler))
+	http.HandleFunc("/inbox/project", app.requireAuth(app.inboxProjectHandler))
 	http.HandleFunc("/tasks/", app.requireAuth(app.tasksListHandler))
 	http.HandleFunc("/tasks", app.requireAuth(app.tasksListHandler))
 	http.HandleFunc("/management", app.requireAuth(app.managementRedirect))

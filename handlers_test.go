@@ -88,6 +88,19 @@ func (f *fakeHandlerData) AllActiveTasks(userID int) ([]models.Task, error) {
 	return f.Tasks, nil
 }
 
+func (f *fakeHandlerData) AllTasksForProject(userID, projectID int) ([]models.Task, error) {
+	if f.TasksErr != nil {
+		return nil, f.TasksErr
+	}
+	var out []models.Task
+	for _, t := range f.Tasks {
+		if t.UserID == userID && t.ProjectID == projectID {
+			out = append(out, t)
+		}
+	}
+	return out, nil
+}
+
 func (f *fakeHandlerData) GetTask(taskID int) (models.Task, error) {
 	if f.GetTaskErr != nil {
 		return models.Task{}, f.GetTaskErr
@@ -152,6 +165,19 @@ func (f *fakeHandlerData) UpdateProject(models.Project) error {
 }
 
 func (f *fakeHandlerData) DeleteProjectForUser(int, int) error {
+	return nil
+}
+
+func (f *fakeHandlerData) CancelActiveTasksForProject(projectID, userID int) error {
+	for i := range f.Tasks {
+		t := &f.Tasks[i]
+		if t.ProjectID == projectID && t.UserID == userID && t.Status == models.StatusActive {
+			t.Status = models.StatusCanceled
+			if f.TasksByID != nil {
+				f.TasksByID[t.ID] = *t
+			}
+		}
+	}
 	return nil
 }
 
@@ -223,7 +249,7 @@ func requestWithUserID(r *http.Request, uid int) *http.Request {
 
 func TestTasksListHandler_RedirectAndList(t *testing.T) {
 	data := &fakeHandlerData{
-		User: models.User{ID: 1, Name: "Test User", Inbox: "note"},
+		User:     models.User{ID: 1, Name: "Test User", Inbox: "note"},
 		Projects: []models.Project{{ID: 10, Name: "P1", UserID: 1}},
 		Areas:    []models.Area{{ID: 20, Name: "A1", UserID: 1}},
 		Tasks: []models.Task{

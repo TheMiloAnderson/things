@@ -13,6 +13,7 @@ type HandlerData interface {
 	AllActiveProjects(userID int) ([]models.Project, error)
 	AllAreas(userID int) ([]models.Area, error)
 	AllActiveTasks(userID int) ([]models.Task, error)
+	AllTasksForProject(userID, projectID int) ([]models.Task, error)
 	GetTask(taskID int) (models.Task, error)
 	SaveTask(t models.Task) (int64, error)
 	UpdateTask(t models.Task) error
@@ -22,6 +23,7 @@ type HandlerData interface {
 	SaveProject(p models.Project) (int64, error)
 	UpdateProject(p models.Project) error
 	DeleteProjectForUser(projectID, userID int) error
+	CancelActiveTasksForProject(projectID, userID int) error
 
 	GetArea(areaID int) (models.Area, error)
 	SaveArea(a models.Area) (int64, error)
@@ -70,6 +72,11 @@ func (s *sqlHandlerData) AllActiveTasks(userID int) ([]models.Task, error) {
 	return t.AllActiveForUser(userID)
 }
 
+func (s *sqlHandlerData) AllTasksForProject(userID, projectID int) ([]models.Task, error) {
+	t := models.Task{Connection: *s.conn}
+	return t.AllTasksForProject(userID, projectID)
+}
+
 func (s *sqlHandlerData) GetTask(taskID int) (models.Task, error) {
 	t := models.Task{Connection: *s.conn}
 	err := t.GetById(taskID)
@@ -116,6 +123,11 @@ func (s *sqlHandlerData) DeleteProjectForUser(projectID, userID int) error {
 		return sql.ErrNoRows
 	}
 	return p.Delete()
+}
+
+func (s *sqlHandlerData) CancelActiveTasksForProject(projectID, userID int) error {
+	t := models.Task{Connection: *s.conn}
+	return t.CancelActiveTasksForProject(projectID, userID)
 }
 
 func (s *sqlHandlerData) GetArea(areaID int) (models.Area, error) {

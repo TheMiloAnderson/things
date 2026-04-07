@@ -3,22 +3,31 @@
 <div class="space-y-4">
     <a href="/management/projects/" class="text-sm hover:text-cgr-sage transition-colors">&larr; All projects</a>
 
-    <div class="flex flex-col xl:flex-row gap-5 xl:gap-8 xl:items-start">
-        <form id="project-edit-form" method="post" action="/management/projects/{{.Project.ID}}" class="flex-1 min-w-0 space-y-3">
-            <h2 class="text-base md:text-lg font-semibold">Edit project</h2>
+    <dialog id="project-done-dialog" class="max-w-md rounded-lg border border-cgr-border bg-cgr-panel p-5 text-white shadow-xl backdrop:bg-black/60">
+        <p class="text-sm text-gray-200 mb-4">Mark this project <strong class="text-white">done</strong>? Any tasks in this project that are still active will be set to canceled. Tasks already marked done will stay done.</p>
+        <div class="flex flex-wrap justify-end gap-2">
+            <button type="button" class="project-dialog-cancel rounded-md border border-cgr-border px-3 py-1.5 text-xs font-medium hover:bg-cgr-panel/80">Cancel</button>
+            <button type="button" id="project-done-confirm" class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110">Confirm</button>
+        </div>
+    </dialog>
+    <dialog id="project-canceled-dialog" class="max-w-md rounded-lg border border-cgr-border bg-cgr-panel p-5 text-white shadow-xl backdrop:bg-black/60">
+        <p class="text-sm text-gray-200 mb-4">Mark this project <strong class="text-white">canceled</strong>? Any tasks in this project that are still active will be set to canceled. Tasks already marked done will stay done.</p>
+        <div class="flex flex-wrap justify-end gap-2">
+            <button type="button" class="project-dialog-cancel rounded-md border border-cgr-border px-3 py-1.5 text-xs font-medium hover:bg-cgr-panel/80">Cancel</button>
+            <button type="button" id="project-canceled-confirm" class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110">Confirm</button>
+        </div>
+    </dialog>
 
-            <div class="grid grid-cols-[2fr_1fr_1fr] gap-x-2 md:gap-x-3">
+    <div class="flex flex-col xl:flex-row gap-5 xl:gap-8 xl:items-start">
+        <form id="project-edit-form" method="post" action="/management/projects/{{.Project.ID}}" class="flex-1 min-w-0 space-y-3" data-project-id="{{.Project.ID}}">
+            <h2 class="text-base md:text-lg font-semibold">Edit project</h2>
+            <input type="hidden" name="status" value="{{.Project.Status}}" />
+
+            <div class="grid grid-cols-[2fr_1fr] gap-x-2 md:gap-x-3">
                 <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Name</span>
-                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Status</span>
                 <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Area</span>
                 <input type="text" name="name" value="{{.Project.Name}}" required
                     class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-2 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
-                <select name="status"
-                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-2 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
-                    <option value="active" {{if eq .Project.Status "active"}}selected{{end}}>Active</option>
-                    <option value="done" {{if eq .Project.Status "done"}}selected{{end}}>Done</option>
-                    <option value="canceled" {{if eq .Project.Status "canceled"}}selected{{end}}>Canceled</option>
-                </select>
                 <select name="area_id"
                     class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-2 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
                     <option value="">&mdash;</option>
@@ -36,13 +45,22 @@
 
             <div class="flex flex-wrap items-center gap-2 pt-1">
                 <button type="submit"
-                    class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110 transition-[filter]">Edit</button>
-                <button type="button" id="project-delete-btn"
-                    class="rounded-md border border-cgr-rose/50 px-3 py-1.5 text-xs font-medium text-cgr-rose hover:bg-cgr-rose/10 transition-colors">Delete</button>
+                    class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110 transition-[filter]">Save</button>
+                {{if eq .Project.Status "active"}}
+                <button type="button" id="project-mark-done"
+                    class="rounded-md border border-cgr-border bg-cgr-panel/50 px-3 py-1.5 text-xs font-medium hover:border-cgr-coral/50 transition-colors">Done</button>
+                <button type="button" id="project-mark-canceled"
+                    class="rounded-md border border-cgr-rose/50 px-3 py-1.5 text-xs font-medium text-cgr-rose hover:bg-cgr-rose/10 transition-colors">Cancel</button>
+                {{end}}
+                {{if eq .Project.Status "canceled"}}
+                <button type="button" id="project-reactivate"
+                    class="rounded-md border border-cgr-sage/60 bg-cgr-panel/50 px-3 py-1.5 text-xs font-medium text-cgr-sage hover:bg-cgr-panel transition-colors">Re-Activate</button>
+                {{end}}
                 <span id="project-edit-msg" class="text-xs text-gray-500"></span>
             </div>
         </form>
 
+        {{if eq .Project.Status "active"}}
         <form action="/task" method="post" class="w-full xl:w-72 shrink-0 space-y-3 rounded-lg border border-cgr-border bg-cgr-panel/40 p-4">
             <h2 class="text-sm font-semibold">New task</h2>
             <p class="text-[11px] text-gray-500">Added to <span class="text-white font-medium">{{.Project.Name}}</span></p>
@@ -83,17 +101,29 @@
             <button type="submit"
                 class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110 transition-[filter]">Create</button>
         </form>
+        {{else}}
+        <div class="w-full xl:w-72 shrink-0 rounded-lg border border-dashed border-cgr-border bg-cgr-panel/20 p-4 text-sm text-gray-500">
+            This project is {{.Project.Status}}. Add tasks only while the project is active.
+        </div>
+        {{end}}
+    </div>
+
+    <div class="pt-2 border-t border-cgr-border/50">
+        {{template "task_forms_list" .TaskForms}}
     </div>
 </div>
+{{template "task_forms_script"}}
 <script>
 (function () {
-  var id = {{.Project.ID}};
+  var form = document.getElementById('project-edit-form');
+  var id = parseInt(form.getAttribute('data-project-id') || '0', 10);
   var msg = document.getElementById('project-edit-msg');
-  document.getElementById('project-delete-btn').addEventListener('click', function () {
-    if (!confirm('Delete this project? Tasks may lose their project link.')) return;
-    msg.textContent = 'Deleting…';
+  var doneDlg = document.getElementById('project-done-dialog');
+  var canceledDlg = document.getElementById('project-canceled-dialog');
+  function postProjectAction(endpoint, redirectToList) {
+    msg.textContent = 'Saving…';
     msg.className = 'text-xs text-gray-500';
-    fetch('/api/project/' + id + '/delete', {
+    fetch('/api/project/' + id + '/' + endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
@@ -101,16 +131,54 @@
     }).then(function (res) { return res.json().then(function (data) { return { res: res, data: data }; }); })
       .then(function (x) {
         if (x.res.ok && x.data.ok) {
-          window.location.href = '/management/projects/';
+          if (redirectToList) {
+            window.location.href = '/management/projects/';
+          } else {
+            window.location.href = '/management/projects/' + id;
+          }
         } else {
-          msg.textContent = (x.data && x.data.error) || 'Delete failed.';
+          msg.textContent = (x.data && x.data.error) || 'Update failed.';
           msg.className = 'text-xs text-cgr-rose';
         }
       }).catch(function () {
         msg.textContent = 'Network error.';
         msg.className = 'text-xs text-cgr-rose';
       });
+  }
+  var markDone = document.getElementById('project-mark-done');
+  if (markDone) {
+    markDone.addEventListener('click', function () { doneDlg.showModal(); });
+  }
+  var markCanceled = document.getElementById('project-mark-canceled');
+  if (markCanceled) {
+    markCanceled.addEventListener('click', function () { canceledDlg.showModal(); });
+  }
+  document.querySelectorAll('.project-dialog-cancel').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      doneDlg.close();
+      canceledDlg.close();
+    });
   });
+  var doneConfirm = document.getElementById('project-done-confirm');
+  if (doneConfirm) {
+    doneConfirm.addEventListener('click', function () {
+      doneDlg.close();
+      postProjectAction('done', true);
+    });
+  }
+  var canceledConfirm = document.getElementById('project-canceled-confirm');
+  if (canceledConfirm) {
+    canceledConfirm.addEventListener('click', function () {
+      canceledDlg.close();
+      postProjectAction('canceled', true);
+    });
+  }
+  var reactivate = document.getElementById('project-reactivate');
+  if (reactivate) {
+    reactivate.addEventListener('click', function () {
+      postProjectAction('reactivate', false);
+    });
+  }
 })();
 </script>
 {{end}}

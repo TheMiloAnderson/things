@@ -140,3 +140,100 @@ func TestTaskAllActiveForUser(t *testing.T) {
 		}
 	}
 }
+
+func TestTaskCancelActiveTasksForProject(t *testing.T) {
+	task := beginTaskTransaction(t)
+	defer task.Rollback()
+
+	active := Task{Connection: task.Connection}
+	active.Name = "Cascade me"
+	active.Status = StatusActive
+	active.Priority = PriorityLow
+	active.DateCreated = time.Now()
+	active.ProjectID = 1
+	active.AreaID = 1
+	active.UserID = 1
+	activeID, err := active.Save()
+	if err != nil {
+		t.Fatalf("Save active: %v", err)
+	}
+
+	done := Task{Connection: task.Connection}
+	done.Name = "Leave done"
+	done.Status = StatusDone
+	done.Priority = PriorityLow
+	done.DateCreated = time.Now()
+	done.ProjectID = 1
+	done.AreaID = 1
+	done.UserID = 1
+	doneID, err := done.Save()
+	if err != nil {
+		t.Fatalf("Save done: %v", err)
+	}
+
+	if err := task.CancelActiveTasksForProject(1, 1); err != nil {
+		t.Fatalf("CancelActiveTasksForProject: %v", err)
+	}
+
+	if err := task.GetById(int(activeID)); err != nil {
+		t.Fatalf("GetById active: %v", err)
+	}
+	if task.Status != StatusCanceled {
+		t.Errorf("Active task should be canceled, got %q", task.Status)
+	}
+
+	verifyDone := Task{Connection: task.Connection}
+	if err := verifyDone.GetById(int(doneID)); err != nil {
+		t.Fatalf("GetById done: %v", err)
+	}
+	if verifyDone.Status != StatusDone {
+		t.Errorf("Done task should stay done, got %q", verifyDone.Status)
+	}
+}
+
+func TestTaskAllTasksForProject(t *testing.T) {
+	task := beginTaskTransaction(t)
+	defer task.Rollback()
+
+	before, err := task.AllTasksForProject(1, 1)
+	if err != nil {
+		t.Fatalf("AllTasksForProject: %v", err)
+	}
+	n0 := len(before)
+
+	tA := Task{Connection: task.Connection}
+	tA.Name = "AllProj active"
+	tA.Status = StatusActive
+	tA.Priority = PriorityLow
+	tA.DateCreated = time.Now()
+	tA.ProjectID = 1
+	tA.AreaID = 1
+	tA.UserID = 1
+	if _, err := tA.Save(); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+	tD := Task{Connection: task.Connection}
+	tD.Name = "AllProj done"
+	tD.Status = StatusDone
+	tD.Priority = PriorityLow
+	tD.DateCreated = time.Now()
+	tD.ProjectID = 1
+	tD.AreaID = 1
+	tD.UserID = 1
+	if _, err := tD.Save(); err != nil {
+		t.Fatalf("Save done: %v", err)
+	}
+
+	after, err := task.AllTasksForProject(1, 1)
+	if err != nil {
+		t.Fatalf("AllTasksForProject: %v", err)
+	}
+	if len(after) != n0+2 {
+		t.Fatalf("expected %d tasks, got %d", n0+2, len(after))
+	}
+	for _, tk := range after {
+		if tk.UserID != 1 || tk.ProjectID != 1 {
+			t.Errorf("Wrong scope: %+v", tk)
+		}
+	}
+}

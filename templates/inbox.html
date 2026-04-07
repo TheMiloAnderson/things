@@ -10,55 +10,96 @@
         </button>
     </form>
 
-    <form action="/task" method="post" class="w-full xl:w-72 shrink-0 space-y-3 rounded-lg border border-cgr-border bg-cgr-panel/40 p-4">
-        <h2 class="text-sm font-semibold">New task</h2>
+    <div class="w-full xl:w-72 shrink-0 space-y-5">
+        <form action="/task" method="post" class="space-y-3 rounded-lg border border-cgr-border bg-cgr-panel/40 p-4">
+            <h2 class="text-sm font-semibold">New task</h2>
 
-        <div>
-            <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1 block">Name</span>
-            <input type="text" name="name" required
-                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-2 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
-        </div>
+            <div>
+                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1 block">Name</span>
+                <input type="text" name="name" required
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-2 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+            </div>
 
-        <div class="grid grid-cols-2 gap-x-2">
-            <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Status</span>
-            <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Priority</span>
-            <select name="status"
-                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
-                <option value="active" selected>Active</option>
-                <option value="done">Done</option>
-                <option value="canceled">Canceled</option>
-            </select>
-            <select name="priority"
-                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
-                <option value="0" selected>Low</option>
-                <option value="1">Medium</option>
-                <option value="2">High</option>
-            </select>
-        </div>
+            <div class="grid grid-cols-2 gap-x-2">
+                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Status</span>
+                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Priority</span>
+                <select name="status"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="active" selected>Active</option>
+                    <option value="done">Done</option>
+                    <option value="canceled">Canceled</option>
+                </select>
+                <select name="priority"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="0" selected>Low</option>
+                    <option value="1">Medium</option>
+                    <option value="2">High</option>
+                </select>
+            </div>
 
-        <div class="grid grid-cols-2 gap-x-2">
-            <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Project</span>
-            <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Area</span>
-            <select name="project_id"
-                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
-                <option value="">&mdash;</option>
-                {{range .Projects}}
-                <option value="{{.ID}}">{{.Name}}</option>
-                {{end}}
-            </select>
-            <select name="area_id"
-                class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
-                <option value="">&mdash;</option>
-                {{range .Areas}}
-                <option value="{{.ID}}">{{.Name}}</option>
-                {{end}}
-            </select>
-        </div>
+            <div class="grid grid-cols-2 gap-x-2">
+                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Project</span>
+                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Area</span>
+                <select name="project_id"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="">&mdash;</option>
+                    {{range .Projects}}
+                    <option value="{{.ID}}">{{.Name}}</option>
+                    {{end}}
+                </select>
+                <select name="area_id"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="">&mdash;</option>
+                    {{range .Areas}}
+                    <option value="{{.ID}}">{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
 
-        <button type="submit"
-            class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110 transition-[filter]">
-            Create
-        </button>
-    </form>
+            <button type="submit"
+                class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110 transition-[filter]">
+                Create
+            </button>
+        </form>
+
+        <form action="/inbox/project" method="post" class="space-y-3 rounded-lg border border-cgr-border bg-cgr-panel/40 p-4">
+            <h2 class="text-sm font-semibold">New project</h2>
+
+            <div>
+                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1 block">Name</span>
+                <input type="text" name="project_name" required
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-2 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-x-2">
+                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Status</span>
+                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Area</span>
+                <select name="project_status"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="active" selected>Active</option>
+                    <option value="done">Done</option>
+                    <option value="canceled">Canceled</option>
+                </select>
+                <select name="project_area_id"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
+                    <option value="">&mdash;</option>
+                    {{range .Areas}}
+                    <option value="{{.ID}}">{{.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
+
+            <div>
+                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1 block">Notes</span>
+                <textarea name="project_notes" rows="3"
+                    class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-2 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage resize-y"></textarea>
+            </div>
+
+            <button type="submit"
+                class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110 transition-[filter]">
+                Create project
+            </button>
+        </form>
+    </div>
 </div>
 {{end}}

@@ -88,6 +88,49 @@ func (t *Task) AllActiveForUser(userID int) ([]Task, error) {
 	return tasks, rows.Err()
 }
 
+// AllTasksForProject returns every task for the user on the given project (any status), newest first.
+func (t *Task) AllTasksForProject(userID, projectID int) ([]Task, error) {
+	rows, err := t.Query(
+		`SELECT id, name, status, priority, date_created, project_id, area_id, user_id FROM tasks
+		WHERE user_id = ? AND project_id = ? ORDER BY date_created DESC`,
+		userID, projectID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tasks []Task
+	for rows.Next() {
+		var task Task
+		task.Connection = t.Connection
+		var projectIDCol sql.NullInt64
+		var areaIDCol sql.NullInt64
+		err := rows.Scan(&task.ID, &task.Name, &task.Status, &task.Priority, &task.DateCreated, &projectIDCol, &areaIDCol, &task.UserID)
+		if err != nil {
+			return nil, err
+		}
+		if projectIDCol.Valid {
+			task.ProjectID = int(projectIDCol.Int64)
+		}
+		if areaIDCol.Valid {
+			task.AreaID = int(areaIDCol.Int64)
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks, rows.Err()
+}
+
+// CancelActiveTasksForProject sets status to canceled for active tasks on this project.
+// Tasks already done or canceled are left unchanged.
+func (t *Task) CancelActiveTasksForProject(projectID, userID int) error {
+	_, err := t.Exec(
+		`UPDATE tasks SET status = ? WHERE project_id = ? AND user_id = ? AND status = ?`,
+		StatusCanceled, projectID, userID, StatusActive,
+	)
+	return err
+}
+
 func (t *Task) Save() (int64, error) {
 	// TODO figure out the ContextIDs logic
 	var projectID any = t.ProjectID

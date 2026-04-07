@@ -28,10 +28,20 @@ func safeManagementProjectReturnPath(s string) string {
 	return "/management/projects/" + strconv.Itoa(id)
 }
 
+func (a *App) updateProjectWithCascade(p models.Project) error {
+	if err := a.Data.UpdateProject(p); err != nil {
+		return err
+	}
+	if p.Status == models.StatusDone || p.Status == models.StatusCanceled {
+		return a.Data.CancelActiveTasksForProject(p.ID, p.UserID)
+	}
+	return nil
+}
+
 type InboxViewModel struct {
-	Inbox           string
-	Projects        []models.Project
-	Areas           []models.Area
+	Inbox    string
+	Projects []models.Project
+	Areas    []models.Area
 }
 
 type TaskViewModel struct {
@@ -41,11 +51,14 @@ type TaskViewModel struct {
 	FormattedCreated string
 }
 
-// TasksListViewModel is the data for GET /tasks/ (active tasks only).
+// TasksListViewModel is the data for GET /tasks/ (active tasks only) and for the shared task_forms_list template.
 type TasksListViewModel struct {
-	Tasks    []models.Task
-	Projects []models.Project
-	Areas    []models.Area
+	Tasks               []models.Task
+	Projects            []models.Project
+	Areas               []models.Area
+	ProjectPageID       int    // 0 on /tasks/; project id on management project edit (removes row if task moved off project)
+	TaskFormsTitle      string // e.g. "Active tasks", "Tasks in this project"
+	TaskFormsShowStatus bool   // true on project edit page: show task status column
 }
 
 func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
@@ -104,6 +117,48 @@ func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
 
+func (a *App) inboxProjectHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	userID := userIDFromRequest(r)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Could not parse form", http.StatusBadRequest)
+		return
+	}
+	name := strings.TrimSpace(r.FormValue("project_name"))
+	if name == "" {
+		http.Error(w, "Name is required", http.StatusBadRequest)
+		return
+	}
+	status := models.Status(strings.TrimSpace(r.FormValue("project_status")))
+	switch status {
+	case models.StatusActive, models.StatusDone, models.StatusCanceled:
+	default:
+		status = models.StatusActive
+	}
+	notes := strings.TrimSpace(r.FormValue("project_notes"))
+	areaID := 0
+	if s := strings.TrimSpace(r.FormValue("project_area_id")); s != "" {
+		if v, err := strconv.Atoi(s); err == nil {
+			areaID = v
+		}
+	}
+	p := models.Project{
+		Name:   name,
+		Status: status,
+		Notes:  notes,
+		AreaID: areaID,
+		UserID: userID,
+	}
+	if _, err := a.Data.SaveProject(p); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 func (a *App) tasksListHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/tasks" {
 		http.Redirect(w, r, "/tasks/", http.StatusSeeOther)
@@ -145,9 +200,10 @@ func (a *App) tasksListHandler(w http.ResponseWriter, r *http.Request) {
 		IsAuthenticated: true,
 		Username:        u.Name,
 		Data: TasksListViewModel{
-			Tasks:    tasks,
-			Projects: projects,
-			Areas:    areas,
+			Tasks:          tasks,
+			Projects:       projects,
+			Areas:          areas,
+			TaskFormsTitle: "Active tasks",
 		},
 	}
 	if err := a.Templates["tasks_list.html"].ExecuteTemplate(w, "layout.html", pageData); err != nil {

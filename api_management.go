@@ -10,10 +10,10 @@ import (
 )
 
 type projectUpdateJSON struct {
-	Name    string `json:"name"`
-	Status  string `json:"status"`
-	Notes   string `json:"notes"`
-	AreaID  *int   `json:"area_id"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	Notes  string `json:"notes"`
+	AreaID *int   `json:"area_id"`
 }
 
 type nameUpdateJSON struct {
@@ -78,6 +78,34 @@ func (a *App) apiProjectHandler(w http.ResponseWriter, r *http.Request) {
 		if body.AreaID != nil && *body.AreaID > 0 {
 			p.AreaID = *body.AreaID
 		}
+		if err := a.updateProjectWithCascade(p); err != nil {
+			writeJSON(w, http.StatusInternalServerError, apiJSONResponse{OK: false, Error: err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusOK, apiJSONResponse{OK: true})
+
+	case "done":
+		p.Status = models.StatusDone
+		if err := a.updateProjectWithCascade(p); err != nil {
+			writeJSON(w, http.StatusInternalServerError, apiJSONResponse{OK: false, Error: err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusOK, apiJSONResponse{OK: true})
+
+	case "canceled":
+		p.Status = models.StatusCanceled
+		if err := a.updateProjectWithCascade(p); err != nil {
+			writeJSON(w, http.StatusInternalServerError, apiJSONResponse{OK: false, Error: err.Error()})
+			return
+		}
+		writeJSON(w, http.StatusOK, apiJSONResponse{OK: true})
+
+	case "reactivate":
+		if p.Status != models.StatusCanceled {
+			writeJSON(w, http.StatusBadRequest, apiJSONResponse{OK: false, Error: "only canceled projects can be re-activated"})
+			return
+		}
+		p.Status = models.StatusActive
 		if err := a.Data.UpdateProject(p); err != nil {
 			writeJSON(w, http.StatusInternalServerError, apiJSONResponse{OK: false, Error: err.Error()})
 			return
