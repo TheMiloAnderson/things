@@ -240,14 +240,14 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 
 	priorityInt, err := strconv.Atoi(strings.TrimSpace(r.FormValue("priority")))
 	if err != nil {
-		priorityInt = int(models.PriorityLow)
+		priorityInt = int(models.PriorityMed)
 	}
 	priority := models.Priority(priorityInt)
 	switch priority {
 	case models.PriorityLow, models.PriorityMed, models.PriorityHigh:
 		// ok
 	default:
-		priority = models.PriorityLow
+		priority = models.PriorityMed
 	}
 
 	projectID := 0
