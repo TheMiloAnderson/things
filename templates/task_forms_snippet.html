@@ -1,9 +1,9 @@
 {{define "task_forms_list"}}
 <div class="space-y-3" id="task-forms-root"{{if ne .ProjectPageID 0}} data-project-page="{{.ProjectPageID}}"{{end}}>
-    <h2 class="text-lg md:text-xl font-semibold">{{if .TaskFormsTitle}}{{.TaskFormsTitle}}{{else}}Active tasks{{end}}</h2>
+    <h2 class="text-lg md:text-xl font-semibold">{{if .TaskFormsTitle}}{{.TaskFormsTitle}}{{else}}Open tasks{{end}}</h2>
 
     {{if not .Tasks}}
-    <p class="text-gray-500 text-sm rounded-lg border border-dashed border-cgr-border px-4 py-8 text-center">{{if ne .ProjectPageID 0}}No tasks in this project.{{else}}No active tasks.{{end}}</p>
+    <p class="text-gray-500 text-sm rounded-lg border border-dashed border-cgr-border px-4 py-8 text-center">{{if ne .ProjectPageID 0}}No tasks in this project.{{else}}No open tasks.{{end}}</p>
     {{else}}
     <div>
         {{if .TaskFormsShowStatus}}
@@ -33,6 +33,7 @@
             <select name="status"
                 class="col-span-1 w-full rounded border border-cgr-border bg-cgr-panel/60 px-1 py-1 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
                 <option value="active" {{if eq .Status "active"}}selected{{end}}>Active</option>
+                <option value="pending" {{if eq .Status "pending"}}selected{{end}}>Pending</option>
                 <option value="done" {{if eq .Status "done"}}selected{{end}}>Done</option>
                 <option value="canceled" {{if eq .Status "canceled"}}selected{{end}}>Canceled</option>
             </select>
@@ -158,7 +159,7 @@
               return;
             }
           }
-          if (body.status !== 'active') {
+          if (body.status === 'done' || body.status === 'canceled') {
             form.remove();
             if (!document.querySelector('.task-form')) location.reload();
           }

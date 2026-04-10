@@ -4,14 +4,14 @@
     <a href="/management/projects/" class="text-sm hover:text-cgr-sage transition-colors">&larr; All projects</a>
 
     <dialog id="project-done-dialog" class="max-w-md rounded-lg border border-cgr-border bg-cgr-panel p-5 text-white shadow-xl backdrop:bg-black/60">
-        <p class="text-sm text-gray-200 mb-4">Mark this project <strong class="text-white">done</strong>? Any tasks in this project that are still active will be set to canceled. Tasks already marked done will stay done.</p>
+        <p class="text-sm text-gray-200 mb-4">Mark this project <strong class="text-white">done</strong>? Tasks that are still active or pending will be set to canceled. Tasks already marked done will stay done.</p>
         <div class="flex flex-wrap justify-end gap-2">
             <button type="button" class="project-dialog-cancel rounded-md border border-cgr-border px-3 py-1.5 text-xs font-medium hover:bg-cgr-panel/80">Cancel</button>
             <button type="button" id="project-done-confirm" class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110">Confirm</button>
         </div>
     </dialog>
     <dialog id="project-canceled-dialog" class="max-w-md rounded-lg border border-cgr-border bg-cgr-panel p-5 text-white shadow-xl backdrop:bg-black/60">
-        <p class="text-sm text-gray-200 mb-4">Mark this project <strong class="text-white">canceled</strong>? Any tasks in this project that are still active will be set to canceled. Tasks already marked done will stay done.</p>
+        <p class="text-sm text-gray-200 mb-4">Mark this project <strong class="text-white">canceled</strong>? Tasks that are still active or pending will be set to canceled. Tasks already marked done will stay done.</p>
         <div class="flex flex-wrap justify-end gap-2">
             <button type="button" class="project-dialog-cancel rounded-md border border-cgr-border px-3 py-1.5 text-xs font-medium hover:bg-cgr-panel/80">Cancel</button>
             <button type="button" id="project-canceled-confirm" class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110">Confirm</button>
@@ -80,6 +80,7 @@
                 <select name="status"
                     class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-1.5 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
                     <option value="active" selected>Active</option>
+                    <option value="pending">Pending</option>
                     <option value="done">Done</option>
                     <option value="canceled">Canceled</option>
                 </select>

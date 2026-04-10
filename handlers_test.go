@@ -171,7 +171,8 @@ func (f *fakeHandlerData) DeleteProjectForUser(int, int) error {
 func (f *fakeHandlerData) CancelActiveTasksForProject(projectID, userID int) error {
 	for i := range f.Tasks {
 		t := &f.Tasks[i]
-		if t.ProjectID == projectID && t.UserID == userID && t.Status == models.StatusActive {
+		if t.ProjectID == projectID && t.UserID == userID &&
+			(t.Status == models.StatusActive || t.Status == models.StatusPending) {
 			t.Status = models.StatusCanceled
 			if f.TasksByID != nil {
 				f.TasksByID[t.ID] = *t
@@ -292,7 +293,7 @@ func TestTasksListHandler_RedirectAndList(t *testing.T) {
 		if !strings.Contains(body, "Alpha task") {
 			t.Fatalf("body should contain task name; got %q", body)
 		}
-		if !strings.Contains(body, "Active tasks") {
+		if !strings.Contains(body, "Open tasks") {
 			t.Fatalf("body should contain page title")
 		}
 	})

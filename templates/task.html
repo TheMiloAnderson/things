@@ -17,6 +17,7 @@
             <select name="status"
                 class="w-full rounded-md border border-cgr-border bg-cgr-panel/60 px-2 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage">
                 <option value="active" {{if eq .Status "active"}}selected{{end}}>Active</option>
+                <option value="pending" {{if eq .Status "pending"}}selected{{end}}>Pending</option>
                 <option value="done" {{if eq .Status "done"}}selected{{end}}>Done</option>
                 <option value="canceled" {{if eq .Status "canceled"}}selected{{end}}>Canceled</option>
             </select>

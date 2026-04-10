@@ -99,7 +99,7 @@ func TestTaskAllActiveForUser(t *testing.T) {
 	task := beginTaskTransaction(t)
 	defer task.Rollback()
 
-	// test_data: user 1 has one active task ("Call Aviator"); add another active and one done
+	// test_data: user 1 has one active task ("Call Aviator"); add another active, one pending, and one done
 	t2 := Task{Connection: task.Connection}
 	t2.Name = "Second active"
 	t2.Status = StatusActive
@@ -110,6 +110,18 @@ func TestTaskAllActiveForUser(t *testing.T) {
 	t2.UserID = 1
 	if _, err := t2.Save(); err != nil {
 		t.Fatalf("Save active task: %v", err)
+	}
+
+	tPending := Task{Connection: task.Connection}
+	tPending.Name = "Planned later"
+	tPending.Status = StatusPending
+	tPending.Priority = PriorityLow
+	tPending.DateCreated = time.Now()
+	tPending.ProjectID = 1
+	tPending.AreaID = 1
+	tPending.UserID = 1
+	if _, err := tPending.Save(); err != nil {
+		t.Fatalf("Save pending task: %v", err)
 	}
 
 	t3 := Task{Connection: task.Connection}
@@ -128,12 +140,12 @@ func TestTaskAllActiveForUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("AllActiveForUser: %v", err)
 	}
-	if len(list) != 2 {
-		t.Fatalf("Expected 2 active tasks for user 1, got %d", len(list))
+	if len(list) != 3 {
+		t.Fatalf("Expected 3 open tasks for user 1, got %d", len(list))
 	}
 	for _, tk := range list {
-		if tk.Status != StatusActive {
-			t.Errorf("Non-active task in list: %+v", tk)
+		if tk.Status != StatusActive && tk.Status != StatusPending {
+			t.Errorf("Task in open list should be active or pending: %+v", tk)
 		}
 		if tk.UserID != 1 {
 			t.Errorf("Wrong user: %+v", tk)
@@ -171,6 +183,19 @@ func TestTaskCancelActiveTasksForProject(t *testing.T) {
 		t.Fatalf("Save done: %v", err)
 	}
 
+	pending := Task{Connection: task.Connection}
+	pending.Name = "Cascade pending"
+	pending.Status = StatusPending
+	pending.Priority = PriorityLow
+	pending.DateCreated = time.Now()
+	pending.ProjectID = 1
+	pending.AreaID = 1
+	pending.UserID = 1
+	pendingID, err := pending.Save()
+	if err != nil {
+		t.Fatalf("Save pending: %v", err)
+	}
+
 	if err := task.CancelActiveTasksForProject(1, 1); err != nil {
 		t.Fatalf("CancelActiveTasksForProject: %v", err)
 	}
@@ -188,6 +213,14 @@ func TestTaskCancelActiveTasksForProject(t *testing.T) {
 	}
 	if verifyDone.Status != StatusDone {
 		t.Errorf("Done task should stay done, got %q", verifyDone.Status)
+	}
+
+	verifyPending := Task{Connection: task.Connection}
+	if err := verifyPending.GetById(int(pendingID)); err != nil {
+		t.Fatalf("GetById pending: %v", err)
+	}
+	if verifyPending.Status != StatusCanceled {
+		t.Errorf("Pending task should be canceled, got %q", verifyPending.Status)
 	}
 }
 

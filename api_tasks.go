@@ -78,7 +78,7 @@ func (a *App) apiTaskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		t.Name = name
 		switch models.Status(body.Status) {
-		case models.StatusActive, models.StatusDone, models.StatusCanceled:
+		case models.StatusActive, models.StatusPending, models.StatusDone, models.StatusCanceled:
 			t.Status = models.Status(body.Status)
 		default:
 			t.Status = models.StatusActive

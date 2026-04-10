@@ -23,6 +23,7 @@ type Status string
 
 const (
 	StatusActive   Status = "active"
+	StatusPending  Status = "pending"
 	StatusDone     Status = "done"
 	StatusCanceled Status = "canceled"
 )
@@ -56,11 +57,12 @@ func (t *Task) GetById(id int) error {
 	return err
 }
 
-// AllActiveForUser returns all active tasks for the given user_id, newest first.
+// AllActiveForUser returns active and pending tasks for the given user_id (not done/canceled), newest first.
 func (t *Task) AllActiveForUser(userID int) ([]Task, error) {
 	rows, err := t.Query(
-		`SELECT id, name, status, priority, date_created, project_id, area_id, user_id FROM tasks WHERE user_id = ? AND status = ? ORDER BY date_created DESC`,
-		userID, StatusActive,
+		`SELECT id, name, status, priority, date_created, project_id, area_id, user_id FROM tasks
+		WHERE user_id = ? AND status IN (?, ?) ORDER BY date_created DESC`,
+		userID, StatusActive, StatusPending,
 	)
 	if err != nil {
 		return nil, err
@@ -121,12 +123,12 @@ func (t *Task) AllTasksForProject(userID, projectID int) ([]Task, error) {
 	return tasks, rows.Err()
 }
 
-// CancelActiveTasksForProject sets status to canceled for active tasks on this project.
+// CancelActiveTasksForProject sets status to canceled for active or pending tasks on this project.
 // Tasks already done or canceled are left unchanged.
 func (t *Task) CancelActiveTasksForProject(projectID, userID int) error {
 	_, err := t.Exec(
-		`UPDATE tasks SET status = ? WHERE project_id = ? AND user_id = ? AND status = ?`,
-		StatusCanceled, projectID, userID, StatusActive,
+		`UPDATE tasks SET status = ? WHERE project_id = ? AND user_id = ? AND status IN (?, ?)`,
+		StatusCanceled, projectID, userID, StatusActive, StatusPending,
 	)
 	return err
 }

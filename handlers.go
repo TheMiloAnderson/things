@@ -28,6 +28,8 @@ func safeManagementProjectReturnPath(s string) string {
 	return "/management/projects/" + strconv.Itoa(id)
 }
 
+// updateProjectWithCascade persists the project; if it is done or canceled, related tasks
+// that are still active or pending are set to canceled (done tasks are unchanged).
 func (a *App) updateProjectWithCascade(p models.Project) error {
 	if err := a.Data.UpdateProject(p); err != nil {
 		return err
@@ -51,13 +53,13 @@ type TaskViewModel struct {
 	FormattedCreated string
 }
 
-// TasksListViewModel is the data for GET /tasks/ (active tasks only) and for the shared task_forms_list template.
+// TasksListViewModel is the data for GET /tasks/ (open tasks: active and pending) and for the shared task_forms_list template.
 type TasksListViewModel struct {
 	Tasks               []models.Task
 	Projects            []models.Project
 	Areas               []models.Area
 	ProjectPageID       int    // 0 on /tasks/; project id on management project edit (removes row if task moved off project)
-	TaskFormsTitle      string // e.g. "Active tasks", "Tasks in this project"
+	TaskFormsTitle      string // e.g. "Open tasks", "Tasks in this project"
 	TaskFormsShowStatus bool   // true on project edit page: show task status column
 }
 
@@ -203,7 +205,7 @@ func (a *App) tasksListHandler(w http.ResponseWriter, r *http.Request) {
 			Tasks:          tasks,
 			Projects:       projects,
 			Areas:          areas,
-			TaskFormsTitle: "Active tasks",
+			TaskFormsTitle: "Open tasks",
 		},
 	}
 	if err := a.Templates["tasks_list.html"].ExecuteTemplate(w, "layout.html", pageData); err != nil {
@@ -232,7 +234,7 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 
 	status := models.Status(strings.TrimSpace(r.FormValue("status")))
 	switch status {
-	case models.StatusActive, models.StatusDone, models.StatusCanceled:
+	case models.StatusActive, models.StatusPending, models.StatusDone, models.StatusCanceled:
 		// ok
 	default:
 		status = models.StatusActive
@@ -416,7 +418,7 @@ func (a *App) taskByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 		status := models.Status(strings.TrimSpace(r.FormValue("status")))
 		switch status {
-		case models.StatusActive, models.StatusDone, models.StatusCanceled:
+		case models.StatusActive, models.StatusPending, models.StatusDone, models.StatusCanceled:
 			t.Status = status
 		}
 
