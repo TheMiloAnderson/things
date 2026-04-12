@@ -75,13 +75,17 @@ func (p *Project) AllActiveForUser(userID int) ([]Project, error) {
 	var projects []Project
 	for rows.Next() {
 		var prj Project
-		err := rows.Scan(&prj.ID, &prj.Name, &prj.Status, &prj.Notes, &prj.AreaID, &prj.UserID)
+		var areaID sql.NullInt64
+		err := rows.Scan(&prj.ID, &prj.Name, &prj.Status, &prj.Notes, &areaID, &prj.UserID)
 		if err != nil {
 			return nil, err
 		}
+		if areaID.Valid {
+			prj.AreaID = int(areaID.Int64)
+		}
 		projects = append(projects, prj)
 	}
-	return projects, nil
+	return projects, rows.Err()
 }
 
 // AllForUser returns every project for the user (any status), ordered by name.
