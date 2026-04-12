@@ -44,6 +44,7 @@ type InboxViewModel struct {
 	Inbox    string
 	Projects []models.Project
 	Areas    []models.Area
+	Contexts []models.Context
 }
 
 type TaskViewModel struct {
@@ -80,13 +81,18 @@ func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	contexts, err := a.Data.AllContextsForUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	pageData := PageData{
 		IsAuthenticated: true,
 		Username:        u.Name,
 	}
 	if r.Method == http.MethodGet {
-		pageData.Data = InboxViewModel{Inbox: u.Inbox, Projects: projects, Areas: areas}
+		pageData.Data = InboxViewModel{Inbox: u.Inbox, Projects: projects, Areas: areas, Contexts: contexts}
 		err := a.Templates["inbox.html"].ExecuteTemplate(w, "layout.html", pageData)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -108,7 +114,7 @@ func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		pageData.Data = InboxViewModel{Inbox: u.Inbox, Projects: projects, Areas: areas}
+		pageData.Data = InboxViewModel{Inbox: u.Inbox, Projects: projects, Areas: areas, Contexts: contexts}
 		err := a.Templates["inbox.html"].ExecuteTemplate(w, "layout.html", pageData)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -266,6 +272,26 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	userContexts, err := a.Data.AllContextsForUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	allowedCtx := make(map[int]struct{}, len(userContexts))
+	for _, c := range userContexts {
+		allowedCtx[c.ID] = struct{}{}
+	}
+	var contextIDs []int
+	for _, s := range r.Form["context_ids"] {
+		id, err := strconv.Atoi(strings.TrimSpace(s))
+		if err != nil || id <= 0 {
+			continue
+		}
+		if _, ok := allowedCtx[id]; ok {
+			contextIDs = append(contextIDs, id)
+		}
+	}
+
 	t := models.Task{}
 	t.Name = name
 	t.Status = status
@@ -274,6 +300,7 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 	t.ProjectID = projectID
 	t.AreaID = areaID
 	t.UserID = userID
+	t.ContextIDs = contextIDs
 
 	_, err = a.Data.SaveTask(t)
 	if err != nil {
@@ -301,6 +328,11 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	contexts, err := a.Data.AllContextsForUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	pageData := PageData{
 		IsAuthenticated: true,
@@ -309,6 +341,7 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 			Inbox:    u.Inbox,
 			Projects: projects,
 			Areas:    areas,
+			Contexts: contexts,
 		},
 	}
 

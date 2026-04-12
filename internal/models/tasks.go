@@ -6,6 +6,25 @@ import (
 	"time"
 )
 
+func dedupePositiveInts(ids []int) []int {
+	if len(ids) == 0 {
+		return nil
+	}
+	seen := make(map[int]struct{}, len(ids))
+	out := make([]int, 0, len(ids))
+	for _, id := range ids {
+		if id <= 0 {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
+}
+
 type Task struct {
 	db.Connection
 	ID          int
@@ -133,8 +152,32 @@ func (t *Task) CancelActiveTasksForProject(projectID, userID int) error {
 	return err
 }
 
-func (t *Task) Save() (int64, error) {
-	// TODO figure out the ContextIDs logic
+func (t *Task) insertTaskContexts(taskID int) error {
+	for _, cid := range dedupePositiveInts(t.ContextIDs) {
+		if _, err := t.Exec(
+			`INSERT INTO task_contexts (task_id, context_id) VALUES (?, ?)`,
+			taskID, cid,
+		); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *Task) Save() (insertID int64, err error) {
+	ownsTx := false
+	if t.Tx == nil && t.DB != nil {
+		if err := t.BeginTx(); err != nil {
+			return 0, err
+		}
+		ownsTx = true
+		defer func() {
+			if err != nil && ownsTx {
+				_ = t.Rollback()
+			}
+		}()
+	}
+
 	var projectID any = t.ProjectID
 	if t.ProjectID == 0 {
 		projectID = nil
@@ -153,6 +196,14 @@ func (t *Task) Save() (int64, error) {
 	id, err := result.LastInsertId()
 	if err != nil {
 		return 0, err
+	}
+	if err = t.insertTaskContexts(int(id)); err != nil {
+		return 0, err
+	}
+	if ownsTx {
+		if err = t.Commit(); err != nil {
+			return 0, err
+		}
 	}
 	return id, nil
 }

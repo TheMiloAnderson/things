@@ -22,6 +22,7 @@ type managementProjectEditView struct {
 	Section   string
 	Project   models.Project
 	Areas     []models.Area
+	Contexts  []models.Context
 	TaskForms TasksListViewModel
 }
 
@@ -124,6 +125,11 @@ func (a *App) handleManagementProjects(w http.ResponseWriter, r *http.Request, p
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			contexts, err := a.Data.AllContextsForUser(userID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			projects, err := a.Data.AllActiveProjects(userID)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -135,9 +141,10 @@ func (a *App) handleManagementProjects(w http.ResponseWriter, r *http.Request, p
 				return
 			}
 			page.Data = managementProjectEditView{
-				Section: "projects",
-				Project: p,
-				Areas:   areas,
+				Section:  "projects",
+				Project:  p,
+				Areas:    areas,
+				Contexts: contexts,
 				TaskForms: TasksListViewModel{
 					Tasks:               projectTasks,
 					Projects:            projects,

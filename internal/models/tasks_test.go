@@ -59,6 +59,34 @@ func TestTaskSave(t *testing.T) {
 	}
 }
 
+func TestTaskSaveWithContexts(t *testing.T) {
+	task := beginTaskTransaction(t)
+	defer task.Rollback()
+
+	task.Name = "Multi-context task"
+	task.Status = StatusActive
+	task.Priority = PriorityMed
+	task.DateCreated = time.Now()
+	task.ProjectID = 1
+	task.AreaID = 1
+	task.UserID = 1
+	task.ContextIDs = []int{1, 2, 1}
+
+	taskID, err := task.Save()
+	if err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	var n int
+	row := task.QueryRow(`SELECT COUNT(*) FROM task_contexts WHERE task_id = ?`, taskID)
+	if err := row.Scan(&n); err != nil {
+		t.Fatalf("count task_contexts: %v", err)
+	}
+	if n != 2 {
+		t.Fatalf("expected 2 context links (deduped), got %d", n)
+	}
+}
+
 func TestTaskUpdate(t *testing.T) {
 	task := beginTaskTransaction(t)
 	defer task.Rollback()

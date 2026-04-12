@@ -99,6 +99,21 @@
                 </select>
             </div>
 
+            {{if .Contexts}}
+            <div>
+                <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1 block">Contexts</span>
+                <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 pt-0.5 items-start">
+                    {{range .Contexts}}
+                    <label class="inline-flex items-center gap-1.5 text-xs text-gray-200 cursor-pointer min-w-0">
+                        <input type="checkbox" name="context_ids" value="{{.ID}}"
+                            class="rounded border-cgr-border bg-cgr-panel/60 text-cgr-sage focus:ring-cgr-sage" />
+                        <span>{{.Name}}</span>
+                    </label>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+
             <button type="submit"
                 class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110 transition-[filter]">Create</button>
         </form>
