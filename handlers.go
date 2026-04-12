@@ -54,14 +54,16 @@ type TaskViewModel struct {
 	FormattedCreated string
 }
 
-// TasksListViewModel is the data for GET /tasks/ (open tasks: active and pending) and for the shared task_forms_list template.
+// TasksListViewModel is the data for the tasks list page and the shared task_forms_list template (project edit).
 type TasksListViewModel struct {
 	Tasks               []models.Task
 	Projects            []models.Project
 	Areas               []models.Area
-	ProjectPageID       int    // 0 on /tasks/; project id on management project edit (removes row if task moved off project)
-	TaskFormsTitle      string // e.g. "Open tasks", "Tasks in this project"
-	TaskFormsShowStatus bool   // true on project edit page: show task status column
+	AreasByID           map[int]string // area ID -> name, for display on the tasks list page
+	ProjectsByID        map[int]string // project ID -> name, for display on the tasks list page
+	ProjectPageID       int            // 0 on /tasks/; project id on management project edit (removes row if task moved off project)
+	TaskFormsTitle      string         // e.g. "Open tasks", "Tasks in this project"
+	TaskFormsShowStatus bool           // true on project edit page: show task status column
 }
 
 func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
@@ -204,13 +206,24 @@ func (a *App) tasksListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	areasByID := make(map[int]string, len(areas))
+	for _, a := range areas {
+		areasByID[a.ID] = a.Name
+	}
+	projectsByID := make(map[int]string, len(projects))
+	for _, p := range projects {
+		projectsByID[p.ID] = p.Name
+	}
+
 	pageData := PageData{
 		IsAuthenticated: true,
 		Username:        u.Name,
 		Data: TasksListViewModel{
-			Tasks:          tasks,
-			Projects:       projects,
-			Areas:          areas,
+			Tasks:        tasks,
+			Projects:     projects,
+			Areas:        areas,
+			AreasByID:    areasByID,
+			ProjectsByID: projectsByID,
 			TaskFormsTitle: "Open tasks",
 		},
 	}
