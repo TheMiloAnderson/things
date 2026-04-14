@@ -497,7 +497,7 @@ func (a *App) taskByIDHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/task/"+strconv.Itoa(id), http.StatusSeeOther)
+		http.Redirect(w, r, "/tasks/", http.StatusSeeOther)
 		return
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
