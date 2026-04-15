@@ -2,8 +2,8 @@
 <div class="flex flex-col xl:flex-row gap-6 xl:gap-8 xl:items-start">
     <form method="post" class="flex-1 min-w-0 space-y-3">
         <h2 class="text-xl font-semibold">Inbox</h2>
-        <textarea name="inbox" rows="18"
-            class="w-full rounded-md border border-cgr-border bg-cgr-panel/50 px-3 py-2 text-sm text-white placeholder-gray-500 shadow-inner focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage resize-y min-h-[280px]">{{.Inbox}}</textarea>
+        <textarea id="inbox-auto-textarea" name="inbox" rows="3"
+            class="w-full rounded-md border border-cgr-border bg-cgr-panel/50 px-3 py-2 text-sm text-white placeholder-gray-500 shadow-inner focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage min-h-[5rem] overflow-hidden resize-none">{{.Inbox}}</textarea>
         <button type="submit"
             class="rounded-md bg-cgr-sage px-3 py-1.5 text-sm font-medium text-cgr-base hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-cgr-sage focus:ring-offset-2 focus:ring-offset-cgr-base transition-[filter]">
             Save
@@ -118,4 +118,17 @@
         </form>
     </div>
 </div>
+<script>
+(function () {
+  var ta = document.getElementById('inbox-auto-textarea');
+  if (!ta) return;
+  function fitHeight() {
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  }
+  ta.addEventListener('input', fitHeight);
+  window.addEventListener('resize', fitHeight);
+  fitHeight();
+})();
+</script>
 {{end}}
