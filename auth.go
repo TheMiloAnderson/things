@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
+	"strings"
 	"things/internal/models"
 
 	"github.com/gorilla/sessions"
@@ -36,7 +37,7 @@ func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	name := r.FormValue("username")
+	name := strings.TrimSpace(r.FormValue("username"))
 	pass := r.FormValue("password")
 	u := models.User{Connection: *a.Connection}
 	err := u.GetByName(name)
