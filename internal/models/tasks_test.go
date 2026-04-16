@@ -32,6 +32,7 @@ func TestTaskSave(t *testing.T) {
 	task.Name = "Call Dave"
 	task.Status = StatusActive
 	task.Priority = PriorityMed
+	task.Notes = "Some notes"
 	task.DateCreated = time.Now()
 	task.ProjectID = 1
 	task.AreaID = 1
@@ -43,19 +44,27 @@ func TestTaskSave(t *testing.T) {
 	}
 
 	newTask := Task{}
+	var notes sql.NullString
 	row := task.QueryRow("SELECT * FROM tasks WHERE id = ?", taskID)
 	err = row.Scan(
 		&newTask.ID,
 		&newTask.Name,
 		&newTask.Status,
 		&newTask.Priority,
+		&notes,
 		&newTask.DateCreated,
 		&newTask.ProjectID,
 		&newTask.AreaID,
 		&newTask.UserID,
 	)
-	if err != nil || newTask.Name != "Call Dave" {
-		t.Fatalf("Task Save Error: %v; New Task: %+v", err, newTask)
+	if err != nil {
+		t.Fatalf("Task Save scan error: %v", err)
+	}
+	if newTask.Name != "Call Dave" {
+		t.Fatalf("expected name 'Call Dave', got %q", newTask.Name)
+	}
+	if !notes.Valid || notes.String != "Some notes" {
+		t.Fatalf("expected notes 'Some notes', got %v", notes)
 	}
 }
 
@@ -97,6 +106,7 @@ func TestTaskUpdate(t *testing.T) {
 	}
 
 	task.Name = "Call Aviator Audio"
+	task.Notes = "Updated notes"
 	err = task.Update()
 	if err != nil {
 		t.Errorf(`TestTaskUpdate Error: %v`, err)
@@ -105,6 +115,9 @@ func TestTaskUpdate(t *testing.T) {
 	task.GetById(1)
 	if err != nil || task.Name != "Call Aviator Audio" {
 		t.Errorf(`TestTaskUpdate GetByID Error: %v, Task: %v`, err, task)
+	}
+	if task.Notes != "Updated notes" {
+		t.Errorf("expected notes 'Updated notes', got %q", task.Notes)
 	}
 }
 

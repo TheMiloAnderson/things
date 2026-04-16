@@ -10,11 +10,12 @@ import (
 )
 
 type taskUpdateJSON struct {
-	Name       string `json:"name"`
-	Status     string `json:"status"`
-	Priority   int    `json:"priority"`
-	ProjectID  *int   `json:"project_id"`
-	AreaID     *int   `json:"area_id"`
+	Name       string  `json:"name"`
+	Status     string  `json:"status"`
+	Priority   int     `json:"priority"`
+	Notes      *string `json:"notes"`
+	ProjectID  *int    `json:"project_id"`
+	AreaID     *int    `json:"area_id"`
 }
 
 type apiJSONResponse struct {
@@ -89,6 +90,9 @@ func (a *App) apiTaskHandler(w http.ResponseWriter, r *http.Request) {
 			t.Priority = p
 		default:
 			t.Priority = models.PriorityLow
+		}
+		if body.Notes != nil {
+			t.Notes = strings.TrimSpace(*body.Notes)
 		}
 		t.ProjectID = 0
 		if body.ProjectID != nil && *body.ProjectID > 0 {

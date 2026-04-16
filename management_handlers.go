@@ -140,18 +140,27 @@ func (a *App) handleManagementProjects(w http.ResponseWriter, r *http.Request, p
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			areasByID := make(map[int]string, len(areas))
+			for _, a := range areas {
+				areasByID[a.ID] = a.Name
+			}
+			projectsByID := make(map[int]string, len(projects))
+			for _, prj := range projects {
+				projectsByID[prj.ID] = prj.Name
+			}
 			page.Data = managementProjectEditView{
 				Section:  "projects",
 				Project:  p,
 				Areas:    areas,
 				Contexts: contexts,
 				TaskForms: TasksListViewModel{
-					Tasks:               projectTasks,
-					Projects:            projects,
-					Areas:               areas,
-					ProjectPageID:       id,
-					TaskFormsTitle:      "Tasks in this project",
-					TaskFormsShowStatus: true,
+					Tasks:          projectTasks,
+					Projects:       projects,
+					Areas:          areas,
+					AreasByID:      areasByID,
+					ProjectsByID:   projectsByID,
+					ProjectPageID:  id,
+					TaskFormsTitle: "Tasks in this project",
 				},
 			}
 			if err := a.Templates["management_projects_edit.html"].ExecuteTemplate(w, "layout.html", page); err != nil {

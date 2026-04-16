@@ -31,6 +31,7 @@ type Task struct {
 	Name        string
 	Status      Status
 	Priority    Priority
+	Notes       string
 	DateCreated time.Time
 	ProjectID   int
 	AreaID      int
@@ -59,7 +60,8 @@ func (t *Task) GetById(id int) error {
 	row := t.QueryRow("SELECT * FROM tasks WHERE id = ?", id)
 	var projectID sql.NullInt64
 	var areaID sql.NullInt64
-	err := row.Scan(&t.ID, &t.Name, &t.Status, &t.Priority, &t.DateCreated, &projectID, &areaID, &t.UserID)
+	var notes sql.NullString
+	err := row.Scan(&t.ID, &t.Name, &t.Status, &t.Priority, &notes, &t.DateCreated, &projectID, &areaID, &t.UserID)
 	if err != nil {
 		return err
 	}
@@ -73,13 +75,16 @@ func (t *Task) GetById(id int) error {
 	} else {
 		t.AreaID = 0
 	}
+	if notes.Valid {
+		t.Notes = notes.String
+	}
 	return err
 }
 
 // AllActiveForUser returns active and pending tasks for the given user_id (not done/canceled), newest first.
 func (t *Task) AllActiveForUser(userID int) ([]Task, error) {
 	rows, err := t.Query(
-		`SELECT id, name, status, priority, date_created, project_id, area_id, user_id FROM tasks
+		`SELECT id, name, status, priority, notes, date_created, project_id, area_id, user_id FROM tasks
 		WHERE user_id = ? AND status IN (?, ?) ORDER BY date_created DESC`,
 		userID, StatusActive, StatusPending,
 	)
@@ -94,7 +99,8 @@ func (t *Task) AllActiveForUser(userID int) ([]Task, error) {
 		task.Connection = t.Connection
 		var projectID sql.NullInt64
 		var areaID sql.NullInt64
-		err := rows.Scan(&task.ID, &task.Name, &task.Status, &task.Priority, &task.DateCreated, &projectID, &areaID, &task.UserID)
+		var notes sql.NullString
+		err := rows.Scan(&task.ID, &task.Name, &task.Status, &task.Priority, &notes, &task.DateCreated, &projectID, &areaID, &task.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -104,6 +110,9 @@ func (t *Task) AllActiveForUser(userID int) ([]Task, error) {
 		if areaID.Valid {
 			task.AreaID = int(areaID.Int64)
 		}
+		if notes.Valid {
+			task.Notes = notes.String
+		}
 		tasks = append(tasks, task)
 	}
 	return tasks, rows.Err()
@@ -112,7 +121,7 @@ func (t *Task) AllActiveForUser(userID int) ([]Task, error) {
 // AllTasksForProject returns every task for the user on the given project (any status), newest first.
 func (t *Task) AllTasksForProject(userID, projectID int) ([]Task, error) {
 	rows, err := t.Query(
-		`SELECT id, name, status, priority, date_created, project_id, area_id, user_id FROM tasks
+		`SELECT id, name, status, priority, notes, date_created, project_id, area_id, user_id FROM tasks
 		WHERE user_id = ? AND project_id = ? ORDER BY date_created DESC`,
 		userID, projectID,
 	)
@@ -127,7 +136,8 @@ func (t *Task) AllTasksForProject(userID, projectID int) ([]Task, error) {
 		task.Connection = t.Connection
 		var projectIDCol sql.NullInt64
 		var areaIDCol sql.NullInt64
-		err := rows.Scan(&task.ID, &task.Name, &task.Status, &task.Priority, &task.DateCreated, &projectIDCol, &areaIDCol, &task.UserID)
+		var notes sql.NullString
+		err := rows.Scan(&task.ID, &task.Name, &task.Status, &task.Priority, &notes, &task.DateCreated, &projectIDCol, &areaIDCol, &task.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -136,6 +146,9 @@ func (t *Task) AllTasksForProject(userID, projectID int) ([]Task, error) {
 		}
 		if areaIDCol.Valid {
 			task.AreaID = int(areaIDCol.Int64)
+		}
+		if notes.Valid {
+			task.Notes = notes.String
 		}
 		tasks = append(tasks, task)
 	}
@@ -187,8 +200,8 @@ func (t *Task) Save() (insertID int64, err error) {
 		areaID = nil
 	}
 	result, err := t.Exec(
-		`INSERT INTO tasks (name, status, priority, date_created, project_id, area_id, user_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`, t.Name, t.Status, t.Priority, t.DateCreated, projectID, areaID, t.UserID,
+		`INSERT INTO tasks (name, status, priority, notes, date_created, project_id, area_id, user_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, t.Name, t.Status, t.Priority, t.Notes, t.DateCreated, projectID, areaID, t.UserID,
 	)
 	if err != nil {
 		return 0, err
@@ -218,8 +231,8 @@ func (t *Task) Update() error {
 		areaID = nil
 	}
 	_, err := t.Exec(
-		`UPDATE tasks SET name = ?, status = ?, priority = ?, date_created = ?, project_id = ?, area_id = ?, user_id = ? 
-		WHERE id = ?`, t.Name, t.Status, t.Priority, t.DateCreated, projectID, areaID, t.UserID, t.ID,
+		`UPDATE tasks SET name = ?, status = ?, priority = ?, notes = ?, date_created = ?, project_id = ?, area_id = ?, user_id = ? 
+		WHERE id = ?`, t.Name, t.Status, t.Priority, t.Notes, t.DateCreated, projectID, areaID, t.UserID, t.ID,
 	)
 	return err
 }

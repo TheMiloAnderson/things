@@ -34,11 +34,11 @@ func loadTemplates() map[string]*template.Template {
 		"management_areas_list.html", "management_areas_new.html",
 		"management_contexts_list.html", "management_contexts_new.html",
 	}
-	taskForms := "templates/task_forms_snippet.html"
+	taskListReadonly := "templates/task_list_readonly_snippet.html"
 	for _, page := range pages {
 		files := []string{layout, nav, "templates/" + page}
-		if page == "management_projects_edit.html" {
-			files = append(files, taskForms)
+		if page == "tasks_list.html" || page == "management_projects_edit.html" {
+			files = append(files, taskListReadonly)
 		}
 		templates[page] = template.Must(template.ParseFiles(files...))
 	}

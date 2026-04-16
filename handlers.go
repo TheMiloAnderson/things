@@ -54,16 +54,15 @@ type TaskViewModel struct {
 	FormattedCreated string
 }
 
-// TasksListViewModel is the data for the tasks list page and the shared task_forms_list template (project edit).
+// TasksListViewModel is the data for the read-only task list (tasks page and project edit).
 type TasksListViewModel struct {
-	Tasks               []models.Task
-	Projects            []models.Project
-	Areas               []models.Area
-	AreasByID           map[int]string // area ID -> name, for display on the tasks list page
-	ProjectsByID        map[int]string // project ID -> name, for display on the tasks list page
-	ProjectPageID       int            // 0 on /tasks/; project id on management project edit (removes row if task moved off project)
-	TaskFormsTitle      string         // e.g. "Open tasks", "Tasks in this project"
-	TaskFormsShowStatus bool           // true on project edit page: show task status column
+	Tasks          []models.Task
+	Projects       []models.Project
+	Areas          []models.Area
+	AreasByID      map[int]string // area ID -> name
+	ProjectsByID   map[int]string // project ID -> name
+	ProjectPageID  int            // 0 on /tasks/; set on project edit (for empty-state copy)
+	TaskFormsTitle string         // e.g. "Open tasks", "Tasks in this project"
 }
 
 func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
@@ -305,10 +304,13 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	notes := strings.TrimSpace(r.FormValue("notes"))
+
 	t := models.Task{}
 	t.Name = name
 	t.Status = status
 	t.Priority = priority
+	t.Notes = notes
 	t.DateCreated = time.Now()
 	t.ProjectID = projectID
 	t.AreaID = areaID
@@ -491,6 +493,7 @@ func (a *App) taskByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		t.ProjectID = projectID
 		t.AreaID = areaID
+		t.Notes = strings.TrimSpace(r.FormValue("notes"))
 
 		if err := a.Data.UpdateTask(t); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

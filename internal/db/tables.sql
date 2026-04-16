@@ -46,6 +46,7 @@ CREATE TABLE tasks (
     name            VARCHAR(255) NOT NULL,
     status          VARCHAR(24) NOT NULL,
     priority        INT,
+    notes           TEXT,
     date_created    DATETIME NOT NULL,
     project_id      INT,
     area_id         INT,
