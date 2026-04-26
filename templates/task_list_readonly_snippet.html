@@ -39,10 +39,9 @@
     row.querySelector('.task-btn-done').addEventListener('click', function () {
       msg.textContent = 'Saving…';
       msg.className = 'task-msg text-xs text-gray-500';
-      fetch('/api/task/' + id + '/done', {
+      window.csrfFetch('/api/task/' + id + '/done', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
         body: '{}'
       }).then(function (res) {
         return res.json().then(function (data) { return { res: res, data: data }; });

@@ -8,6 +8,7 @@
     </header>
 
     <form action="/task/{{.ID}}" method="post" class="space-y-3">
+        {{ csrfField }}
         <div class="grid grid-cols-[2fr_1fr_1fr] gap-x-2 md:gap-x-3">
             <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Name</span>
             <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Status</span>

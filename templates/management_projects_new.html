@@ -3,6 +3,7 @@
 <div class="max-w-2xl space-y-4">
     <h1 class="text-xl font-semibold">New project</h1>
     <form method="post" action="/management/projects/" class="space-y-3">
+        {{ csrfField }}
         <div class="grid grid-cols-[2fr_1fr_1fr] gap-x-3">
             <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Name</span>
             <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1">Status</span>

@@ -3,6 +3,7 @@
 <div class="max-w-md space-y-4">
     <h1 class="text-xl font-semibold">New context</h1>
     <form method="post" action="/management/contexts/" class="space-y-3">
+        {{ csrfField }}
         <div>
             <span class="text-[11px] font-medium uppercase tracking-wider text-gray-500 pb-1 block">Name</span>
             <input type="text" name="name" required

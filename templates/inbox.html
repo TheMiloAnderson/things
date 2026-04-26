@@ -1,6 +1,7 @@
 {{define "content"}}
 <div class="flex flex-col xl:flex-row gap-6 xl:gap-8 xl:items-start">
     <form method="post" class="flex-1 min-w-0 space-y-3">
+        {{ csrfField }}
         <h2 class="text-xl font-semibold">Inbox</h2>
         <textarea id="inbox-auto-textarea" name="inbox" rows="3"
             class="w-full rounded-md border border-cgr-border bg-cgr-panel/50 px-3 py-2 text-sm text-white placeholder-gray-500 shadow-inner focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage min-h-[5rem] overflow-hidden resize-none">{{.Inbox}}</textarea>
@@ -12,6 +13,7 @@
 
     <div class="w-full xl:w-72 shrink-0 space-y-5">
         <form action="/task" method="post" class="space-y-3 rounded-lg border border-cgr-border bg-cgr-panel/40 p-4">
+            {{ csrfField }}
             <h2 class="text-sm font-semibold">New task</h2>
 
             <div>
@@ -85,6 +87,7 @@
         </form>
 
         <form action="/inbox/project" method="post" class="space-y-3 rounded-lg border border-cgr-border bg-cgr-panel/40 p-4">
+            {{ csrfField }}
             <h2 class="text-sm font-semibold">New project</h2>
 
             <div>

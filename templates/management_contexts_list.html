@@ -44,10 +44,9 @@
       var name = form.querySelector('[name=name]').value.trim();
       if (!name) { setMsg(form, 'Required', false); return; }
       setMsg(form, 'Saving…');
-      fetch('/api/context/' + id + '/update', {
+      window.csrfFetch('/api/context/' + id + '/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
         body: JSON.stringify({ name: name })
       }).then(function (res) { return res.json().then(function (data) { return { res: res, data: data }; }); })
         .then(function (x) {
@@ -58,10 +57,9 @@
     form.querySelector('.mgmt-c-delete').addEventListener('click', function () {
       if (!confirm('Delete this context?')) return;
       setMsg(form, 'Deleting…');
-      fetch('/api/context/' + id + '/delete', {
+      window.csrfFetch('/api/context/' + id + '/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
         body: '{}'
       }).then(function (res) { return res.json().then(function (data) { return { res: res, data: data }; }); })
         .then(function (x) {

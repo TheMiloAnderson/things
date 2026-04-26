@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
 	"net/http"
 	"strconv"
@@ -94,10 +93,7 @@ func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method == http.MethodGet {
 		pageData.Data = InboxViewModel{Inbox: u.Inbox, Projects: projects, Areas: areas, Contexts: contexts}
-		err := a.Templates["inbox.html"].ExecuteTemplate(w, "layout.html", pageData)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		a.render(w, r, "inbox.html", pageData)
 		return
 	}
 	if r.Method == http.MethodPost {
@@ -116,10 +112,7 @@ func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		pageData.Data = InboxViewModel{Inbox: u.Inbox, Projects: projects, Areas: areas, Contexts: contexts}
-		err := a.Templates["inbox.html"].ExecuteTemplate(w, "layout.html", pageData)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		a.render(w, r, "inbox.html", pageData)
 		return
 	}
 
@@ -218,17 +211,15 @@ func (a *App) tasksListHandler(w http.ResponseWriter, r *http.Request) {
 		IsAuthenticated: true,
 		Username:        u.Name,
 		Data: TasksListViewModel{
-			Tasks:        tasks,
-			Projects:     projects,
-			Areas:        areas,
-			AreasByID:    areasByID,
-			ProjectsByID: projectsByID,
+			Tasks:          tasks,
+			Projects:       projects,
+			Areas:          areas,
+			AreasByID:      areasByID,
+			ProjectsByID:   projectsByID,
 			TaskFormsTitle: "Open tasks",
 		},
 	}
-	if err := a.Templates["tasks_list.html"].ExecuteTemplate(w, "layout.html", pageData); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	a.render(w, r, "tasks_list.html", pageData)
 }
 
 func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
@@ -360,14 +351,8 @@ func (a *App) taskHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	var buf bytes.Buffer
-	if err := a.Templates["inbox.html"].ExecuteTemplate(&buf, "layout.html", pageData); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	w.WriteHeader(http.StatusCreated)
-	_, _ = w.Write(buf.Bytes())
+	a.render(w, r, "inbox.html", pageData)
 }
 
 func (a *App) taskByIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -432,9 +417,7 @@ func (a *App) taskByIDHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		vm := TaskViewModel{Task: t, Projects: projects, Areas: areas, FormattedCreated: formatted}
 		pageData.Data = vm
-		if err := a.Templates["task.html"].ExecuteTemplate(w, "layout.html", pageData); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		a.render(w, r, "task.html", pageData)
 		return
 
 	case http.MethodPost:

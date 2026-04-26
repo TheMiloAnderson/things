@@ -95,9 +95,7 @@ func (a *App) handleManagementProjects(w http.ResponseWriter, r *http.Request, p
 			return
 		}
 		page.Data = managementProjectNewView{Section: "projects", Areas: areas}
-		if err := a.Templates["management_projects_new.html"].ExecuteTemplate(w, "layout.html", page); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		a.render(w, r, "management_projects_new.html", *page)
 
 	case len(parts) == 2 && parts[1] != "new":
 		id, err := strconv.Atoi(parts[1])
@@ -163,9 +161,7 @@ func (a *App) handleManagementProjects(w http.ResponseWriter, r *http.Request, p
 					TaskFormsTitle: "Tasks in this project",
 				},
 			}
-			if err := a.Templates["management_projects_edit.html"].ExecuteTemplate(w, "layout.html", page); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			a.render(w, r, "management_projects_edit.html", *page)
 		case http.MethodPost:
 			if err := r.ParseForm(); err != nil {
 				http.Error(w, "Could not parse form", http.StatusBadRequest)
@@ -257,9 +253,7 @@ func (a *App) handleManagementProjects(w http.ResponseWriter, r *http.Request, p
 			return
 		}
 		page.Data = managementProjectsListView{Section: "projects", Projects: projects}
-		if err := a.Templates["management_projects_list.html"].ExecuteTemplate(w, "layout.html", page); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		a.render(w, r, "management_projects_list.html", *page)
 
 	default:
 		http.NotFound(w, r)
@@ -270,9 +264,7 @@ func (a *App) handleManagementAreas(w http.ResponseWriter, r *http.Request, page
 	switch {
 	case len(parts) == 2 && parts[1] == "new" && r.Method == http.MethodGet:
 		page.Data = managementAreaNewView{Section: "areas"}
-		if err := a.Templates["management_areas_new.html"].ExecuteTemplate(w, "layout.html", page); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		a.render(w, r, "management_areas_new.html", *page)
 
 	case len(parts) == 1 && r.Method == http.MethodPost:
 		if err := r.ParseForm(); err != nil {
@@ -298,9 +290,7 @@ func (a *App) handleManagementAreas(w http.ResponseWriter, r *http.Request, page
 			return
 		}
 		page.Data = managementAreasListView{Section: "areas", Areas: areas}
-		if err := a.Templates["management_areas_list.html"].ExecuteTemplate(w, "layout.html", page); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		a.render(w, r, "management_areas_list.html", *page)
 
 	default:
 		http.NotFound(w, r)
@@ -311,9 +301,7 @@ func (a *App) handleManagementContexts(w http.ResponseWriter, r *http.Request, p
 	switch {
 	case len(parts) == 2 && parts[1] == "new" && r.Method == http.MethodGet:
 		page.Data = managementContextNewView{Section: "contexts"}
-		if err := a.Templates["management_contexts_new.html"].ExecuteTemplate(w, "layout.html", page); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		a.render(w, r, "management_contexts_new.html", *page)
 
 	case len(parts) == 1 && r.Method == http.MethodPost:
 		if err := r.ParseForm(); err != nil {
@@ -339,9 +327,7 @@ func (a *App) handleManagementContexts(w http.ResponseWriter, r *http.Request, p
 			return
 		}
 		page.Data = managementContextsListView{Section: "contexts", Contexts: contexts}
-		if err := a.Templates["management_contexts_list.html"].ExecuteTemplate(w, "layout.html", page); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		a.render(w, r, "management_contexts_list.html", *page)
 
 	default:
 		http.NotFound(w, r)

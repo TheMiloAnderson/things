@@ -20,6 +20,7 @@
 
     <div class="flex flex-col xl:flex-row gap-5 xl:gap-8 xl:items-start">
         <form id="project-edit-form" method="post" action="/management/projects/{{.Project.ID}}" class="flex-1 min-w-0 space-y-3" data-project-id="{{.Project.ID}}">
+            {{ csrfField }}
             <h2 class="text-base md:text-lg font-semibold">Edit project</h2>
             <input type="hidden" name="status" value="{{.Project.Status}}" />
 
@@ -62,6 +63,7 @@
 
         {{if eq .Project.Status "active"}}
         <form action="/task" method="post" class="w-full xl:w-72 shrink-0 space-y-3 rounded-lg border border-cgr-border bg-cgr-panel/40 p-4">
+            {{ csrfField }}
             <h2 class="text-sm font-semibold">New task</h2>
             <p class="text-[11px] text-gray-500">Added to <span class="text-white font-medium">{{.Project.Name}}</span></p>
             <input type="hidden" name="project_id" value="{{.Project.ID}}" />
@@ -145,10 +147,9 @@
   function postProjectAction(endpoint, redirectToList) {
     msg.textContent = 'Saving…';
     msg.className = 'text-xs text-gray-500';
-    fetch('/api/project/' + id + '/' + endpoint, {
+    window.csrfFetch('/api/project/' + id + '/' + endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'same-origin',
       body: '{}'
     }).then(function (res) { return res.json().then(function (data) { return { res: res, data: data }; }); })
       .then(function (x) {
