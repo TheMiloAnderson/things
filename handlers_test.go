@@ -55,6 +55,36 @@ func (f *fakeHandlerData) GetUser(userID int) (models.User, error) {
 	return f.User, nil
 }
 
+func (f *fakeHandlerData) GetUserByEmail(email string) (models.User, error) {
+	_ = email
+	return models.User{}, sql.ErrNoRows
+}
+
+func (f *fakeHandlerData) GetUserByName(name string) (models.User, error) {
+	_ = name
+	return models.User{}, sql.ErrNoRows
+}
+
+func (f *fakeHandlerData) CreateUser(models.User) (int64, error) {
+	return 1, nil
+}
+
+func (f *fakeHandlerData) MarkEmailVerified(int) error {
+	return nil
+}
+
+func (f *fakeHandlerData) UpdatePassword(int, string) error {
+	return nil
+}
+
+func (f *fakeHandlerData) IssueAuthToken(int, models.TokenPurpose, time.Duration) (string, error) {
+	return "fake-token", nil
+}
+
+func (f *fakeHandlerData) ConsumeAuthToken(string, models.TokenPurpose) (int, error) {
+	return 0, models.ErrTokenInvalid
+}
+
 func (f *fakeHandlerData) UpdateUserInbox(userID int, inbox string) error {
 	if f.UpdateInboxErr != nil {
 		return f.UpdateInboxErr

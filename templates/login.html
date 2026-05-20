@@ -1,6 +1,16 @@
 {{define "content"}}
+{{$vm := .}}
 <div class="mx-auto max-w-xs rounded-lg border border-cgr-border bg-cgr-panel/50 p-6">
     <h2 class="text-lg font-semibold mb-5">Login</h2>
+    {{if eq $vm.Flash "verified"}}
+    <p class="mb-4 rounded-md border border-cgr-sage/50 bg-cgr-sage/10 px-3 py-2 text-sm text-cgr-sage">Email verified. You can sign in now.</p>
+    {{end}}
+    {{if eq $vm.Flash "reset"}}
+    <p class="mb-4 rounded-md border border-cgr-sage/50 bg-cgr-sage/10 px-3 py-2 text-sm text-cgr-sage">Password updated. Sign in with your new password.</p>
+    {{end}}
+    {{if $vm.Error}}
+    <p class="mb-4 rounded-md border border-cgr-rose/50 bg-cgr-rose/10 px-3 py-2 text-sm text-cgr-rose">{{$vm.Error}}</p>
+    {{end}}
     <form action="/login" method="POST" class="space-y-4">
         {{ csrfField }}
         <div>
@@ -18,5 +28,16 @@
             Sign in
         </button>
     </form>
+    {{if $vm.ShowResend}}
+    <form action="/resend-verification" method="POST" class="mt-4">
+        {{ csrfField }}
+        <input type="hidden" name="email" value="{{$vm.Email}}" />
+        <button type="submit" class="w-full text-sm text-cgr-sage hover:underline">Resend verification email</button>
+    </form>
+    {{end}}
+    <p class="mt-4 flex justify-between text-sm text-gray-400">
+        <a href="/forgot-password" class="hover:text-cgr-sage">Forgot password?</a>
+        <a href="/signup" class="hover:text-cgr-sage">Create account</a>
+    </p>
 </div>
 {{end}}

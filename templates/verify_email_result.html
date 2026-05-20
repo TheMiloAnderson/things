@@ -1,0 +1,16 @@
+{{define "content"}}
+{{$vm := .}}
+<div class="mx-auto max-w-sm rounded-lg border border-cgr-border bg-cgr-panel/50 p-6">
+    <h2 class="text-lg font-semibold mb-3">Email verification</h2>
+    {{if eq $vm.Error "expired"}}
+    <p class="text-sm text-gray-300">This verification link has expired. Sign up again or request a new link from the sign-in page.</p>
+    {{else if eq $vm.Error "used"}}
+    <p class="text-sm text-gray-300">This link has already been used. Try signing in.</p>
+    {{else}}
+    <p class="text-sm text-gray-300">This verification link is invalid. Check the URL or request a new link.</p>
+    {{end}}
+    <p class="mt-4 text-center text-sm">
+        <a href="/login" class="text-cgr-sage hover:underline">Go to sign in</a>
+    </p>
+</div>
+{{end}}

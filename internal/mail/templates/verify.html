@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; line-height: 1.5; color: #2A363B;">
+<p>Hi{{if .Name}} {{.Name}}{{end}},</p>
+<p>Please verify your email address by clicking the link below:</p>
+<p><a href="{{.Link}}">Verify email</a></p>
+<p>Or copy and paste this URL into your browser:<br>{{.Link}}</p>
+<p>This link expires in 24 hours. If you did not create an account, you can ignore this email.</p>
+<p>— Things</p>
+</body>
+</html>

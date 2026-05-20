@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"time"
 	"things/internal/db"
 	"things/internal/models"
 )
@@ -9,6 +10,13 @@ import (
 // HandlerData abstracts persistence for HTTP handlers (enables tests with fakes).
 type HandlerData interface {
 	GetUser(userID int) (models.User, error)
+	GetUserByEmail(email string) (models.User, error)
+	GetUserByName(name string) (models.User, error)
+	CreateUser(u models.User) (int64, error)
+	MarkEmailVerified(userID int) error
+	UpdatePassword(userID int, passwordHash string) error
+	IssueAuthToken(userID int, purpose models.TokenPurpose, ttl time.Duration) (string, error)
+	ConsumeAuthToken(plaintext string, purpose models.TokenPurpose) (int, error)
 	UpdateUserInbox(userID int, inbox string) error
 	AllActiveProjects(userID int) ([]models.Project, error)
 	AllAreas(userID int) ([]models.Area, error)
@@ -46,6 +54,41 @@ func (s *sqlHandlerData) GetUser(userID int) (models.User, error) {
 	u := models.User{Connection: *s.conn}
 	err := u.GetById(userID)
 	return u, err
+}
+
+func (s *sqlHandlerData) GetUserByEmail(email string) (models.User, error) {
+	u := models.User{Connection: *s.conn}
+	err := u.GetByEmail(email)
+	return u, err
+}
+
+func (s *sqlHandlerData) GetUserByName(name string) (models.User, error) {
+	u := models.User{Connection: *s.conn}
+	err := u.GetByName(name)
+	return u, err
+}
+
+func (s *sqlHandlerData) CreateUser(u models.User) (int64, error) {
+	u.Connection = *s.conn
+	return u.Create()
+}
+
+func (s *sqlHandlerData) MarkEmailVerified(userID int) error {
+	u := models.User{Connection: *s.conn, ID: userID}
+	return u.MarkEmailVerified()
+}
+
+func (s *sqlHandlerData) UpdatePassword(userID int, passwordHash string) error {
+	u := models.User{Connection: *s.conn, ID: userID}
+	return u.UpdatePassword(passwordHash)
+}
+
+func (s *sqlHandlerData) IssueAuthToken(userID int, purpose models.TokenPurpose, ttl time.Duration) (string, error) {
+	return models.IssueToken(*s.conn, userID, purpose, ttl)
+}
+
+func (s *sqlHandlerData) ConsumeAuthToken(plaintext string, purpose models.TokenPurpose) (int, error) {
+	return models.ConsumeToken(*s.conn, plaintext, purpose)
 }
 
 func (s *sqlHandlerData) UpdateUserInbox(userID int, inbox string) error {

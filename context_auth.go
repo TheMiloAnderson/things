@@ -47,6 +47,24 @@ func (a *App) requireAuth(next http.HandlerFunc) http.HandlerFunc {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
+
+		u, err := a.Data.GetUser(uid)
+		if err != nil {
+			http.Error(w, "Internal error", http.StatusInternalServerError)
+			return
+		}
+		if u.PasswordChangedAt.Valid {
+			session, _ := a.Store.Get(r, "session-name")
+			issued, _ := session.Values["issued_at"].(int64)
+			if issued == 0 || u.PasswordChangedAt.Time.Unix() > issued {
+				session.Values["authenticated"] = false
+				session.Options.MaxAge = -1
+				_ = session.Save(r, w)
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
+				return
+			}
+		}
+
 		ctx := context.WithValue(r.Context(), userIDContextKey, uid)
 		next(w, r.WithContext(ctx))
 	}

@@ -1,10 +1,14 @@
 INSERT INTO users (
-    name, 
-    password_hash, 
+    name,
+    email,
+    email_verified_at,
+    password_hash,
     inbox
 ) VALUES (
-    "Milo Anderson", 
-    "fake hash for now", 
+    "Milo Anderson",
+    "milo@example.com",
+    NOW(),
+    "fake hash for now",
     "inbox text has a 1:1 relationship with user!"
 );
 

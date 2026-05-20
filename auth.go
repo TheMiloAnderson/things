@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 	"things/internal/models"
 
 	"github.com/gorilla/sessions"
@@ -33,12 +34,19 @@ func getStore() *sessions.CookieStore {
 
 func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		pageData := PageData{
-			IsAuthenticated: false,
-			Username:        "",
-			Data:            nil,
+		vm := AuthViewModel{}
+		switch r.URL.Query().Get("verified") {
+		case "1":
+			vm.Flash = "verified"
 		}
-		a.render(w, r, "login.html", pageData)
+		switch r.URL.Query().Get("reset") {
+		case "1":
+			vm.Flash = "reset"
+		}
+		a.render(w, r, "login.html", PageData{
+			IsAuthenticated: false,
+			Data:            vm,
+		})
 		return
 	}
 
@@ -76,6 +84,21 @@ func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !u.IsEmailVerified() {
+		if a.LoginLimiter != nil {
+			a.LoginLimiter.RecordFailure(loginLimiterKey(r))
+		}
+		a.render(w, r, "login.html", PageData{
+			IsAuthenticated: false,
+			Data: AuthViewModel{
+				Error:      "Please verify your email before signing in.",
+				Email:      u.Email,
+				ShowResend: true,
+			},
+		})
+		return
+	}
+
 	if a.LoginLimiter != nil {
 		a.LoginLimiter.Reset(loginLimiterKey(r))
 	}
@@ -83,6 +106,7 @@ func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 	session, _ := a.Store.Get(r, "session-name")
 	session.Values["authenticated"] = true
 	session.Values["user_id"] = u.ID
+	session.Values["issued_at"] = time.Now().Unix()
 	if err := session.Save(r, w); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

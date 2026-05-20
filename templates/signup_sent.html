@@ -1,0 +1,23 @@
+{{define "content"}}
+{{$vm := .}}
+<div class="mx-auto max-w-sm rounded-lg border border-cgr-border bg-cgr-panel/50 p-6">
+    <h2 class="text-lg font-semibold mb-3">Check your email</h2>
+    {{if $vm.Message}}
+    <p class="text-sm text-gray-300">{{$vm.Message}}</p>
+    {{else}}
+    <p class="text-sm text-gray-300">We've sent a verification link to <strong class="text-white">{{$vm.Email}}</strong>. Open it to activate your account.</p>
+    {{end}}
+    <p class="mt-4 text-sm text-gray-400">Didn't get it? Check spam, or resend below.</p>
+    <form action="/resend-verification" method="POST" class="mt-4 space-y-3">
+        {{ csrfField }}
+        <input type="hidden" name="email" value="{{$vm.Email}}" />
+        <button type="submit"
+            class="w-full rounded-md border border-cgr-border px-4 py-2 text-sm font-medium text-gray-200 hover:border-cgr-sage hover:text-cgr-sage transition-colors">
+            Resend verification email
+        </button>
+    </form>
+    <p class="mt-4 text-center text-sm text-gray-400">
+        <a href="/login" class="text-cgr-sage hover:underline">Back to sign in</a>
+    </p>
+</div>
+{{end}}

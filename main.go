@@ -9,10 +9,12 @@ import (
 	"os"
 	"strings"
 	"things/internal/db"
+	"things/internal/mail"
 	"time"
 
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/sessions"
+	"github.com/lpernett/godotenv"
 )
 
 type App struct {
@@ -22,6 +24,9 @@ type App struct {
 	Store        *sessions.CookieStore
 	Templates    map[string]*template.Template
 	LoginLimiter *loginLimiter
+	AuthLimiter  *authRateLimiters
+	Mailer       mail.Sender
+	BaseURL      string
 }
 
 type PageData struct {
@@ -46,6 +51,9 @@ func loadTemplates() map[string]*template.Template {
 	nav := "templates/management_nav.html"
 	pages := []string{
 		"inbox.html", "login.html", "task.html", "tasks_list.html",
+		"signup.html", "signup_sent.html", "verify_email_result.html",
+		"forgot_password.html", "forgot_password_sent.html",
+		"reset_password.html",
 		"management_projects_list.html", "management_projects_new.html", "management_projects_edit.html",
 		"management_areas_list.html", "management_areas_new.html",
 		"management_contexts_list.html", "management_contexts_new.html",
@@ -105,7 +113,26 @@ func csrfTrustedOrigins() []string {
 	return out
 }
 
+func mailSenderFromEnv() mail.Sender {
+	godotenv.Load()
+	key := os.Getenv("RESEND_API_KEY")
+	from := os.Getenv("MAIL_FROM_ADDR")
+	if from == "" {
+		from = "Things <noreply@localhost>"
+	}
+	return &mail.ResendSender{APIKey: key, From: from}
+}
+
+func appBaseURL() string {
+	godotenv.Load()
+	if v := strings.TrimSpace(os.Getenv("APP_BASE_URL")); v != "" {
+		return strings.TrimRight(v, "/")
+	}
+	return "http://127.0.0.1:8888"
+}
+
 func main() {
+	godotenv.Load()
 	dbConn := db.Connection{}
 	dbConn.Connect("tasks")
 	store := getStore()
@@ -116,9 +143,17 @@ func main() {
 		Store:        store,
 		Templates:    loadTemplates(),
 		LoginLimiter: newLoginLimiter(5, 5*time.Minute),
+		AuthLimiter:  newAuthRateLimiters(),
+		Mailer:       mailSenderFromEnv(),
+		BaseURL:      appBaseURL(),
 	}
 	http.HandleFunc("/login", app.loginHandler)
 	http.HandleFunc("/logout", app.logoutHandler)
+	http.HandleFunc("/signup", app.signupHandler)
+	http.HandleFunc("/verify-email", app.verifyEmailHandler)
+	http.HandleFunc("/forgot-password", app.forgotPasswordHandler)
+	http.HandleFunc("/reset-password", app.resetPasswordHandler)
+	http.HandleFunc("/resend-verification", app.resendVerificationHandler)
 
 	http.HandleFunc("/", app.requireAuth(app.inboxHandler))
 	http.HandleFunc("/inbox/project", app.requireAuth(app.inboxProjectHandler))
