@@ -82,7 +82,13 @@ type emailTemplateData struct {
 	Link string
 }
 
-func renderTemplate(name string, data emailTemplateData) (string, error) {
+type newAccountTemplateData struct {
+	Username string
+	Email    string
+	UserID   int
+}
+
+func renderTemplate(name string, data any) (string, error) {
 	tmpl, err := template.ParseFS(templateFS, "templates/"+name)
 	if err != nil {
 		return "", err
@@ -128,4 +134,23 @@ func SendReset(sender Sender, to, name, link string) error {
 		return err
 	}
 	return sender.Send(to, "Reset your Things password", html, text)
+}
+
+func RenderNewAccountNotification(username, email string, userID int) (html, text string, err error) {
+	data := newAccountTemplateData{Username: username, Email: email, UserID: userID}
+	html, err = renderTemplate("new_account.html", data)
+	if err != nil {
+		return "", "", err
+	}
+	text, err = renderTemplate("new_account.txt", data)
+	return html, text, err
+}
+
+func SendNewAccountNotification(sender Sender, notifyTo, username, email string, userID int) error {
+	html, text, err := RenderNewAccountNotification(username, email, userID)
+	if err != nil {
+		return err
+	}
+	subject := "New Things signup: " + username
+	return sender.Send(notifyTo, subject, html, text)
 }

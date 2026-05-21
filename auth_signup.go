@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -130,7 +131,18 @@ func (a *App) signupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	a.notifyNewAccount(int(id), name, email)
+
 	a.authPage(w, r, "signup_sent.html", AuthViewModel{Email: email})
+}
+
+func (a *App) notifyNewAccount(userID int, username, email string) {
+	if a.NewAccountNotificationEmail == "" {
+		return
+	}
+	if err := mail.SendNewAccountNotification(a.Mailer, a.NewAccountNotificationEmail, username, email, userID); err != nil {
+		log.Printf("new account notification to %s: %v", a.NewAccountNotificationEmail, err)
+	}
 }
 
 func (a *App) verifyEmailHandler(w http.ResponseWriter, r *http.Request) {

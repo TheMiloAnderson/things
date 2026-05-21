@@ -1,0 +1,9 @@
+A new Things account was created.
+
+Username: {{.Username}}
+Email: {{.Email}}
+User ID: {{.UserID}}
+
+The account is not verified until they complete the email verification link.
+
+— Things

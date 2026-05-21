@@ -125,6 +125,33 @@ func testAuthApp(data HandlerData) (*App, *mail.NoopSender) {
 	return app, sender
 }
 
+func TestSignupHandler_SendsNewAccountNotification(t *testing.T) {
+	data := newAuthFakeData()
+	app, sender := testAuthApp(data)
+	app.NewAccountNotificationEmail = "admin@example.com"
+
+	body := url.Values{
+		"username":         {"newuser"},
+		"email":            {"new@example.com"},
+		"password":         {"longpassword12"},
+		"password_confirm": {"longpassword12"},
+	}
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(body.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	app.signupHandler(w, r)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status %d", w.Code)
+	}
+	if sender.Last.To != "admin@example.com" {
+		t.Fatalf("notify to %q", sender.Last.To)
+	}
+	if !strings.Contains(sender.Last.Subject, "newuser") {
+		t.Fatalf("subject %q", sender.Last.Subject)
+	}
+}
+
 func TestSignupHandler_SendsVerification(t *testing.T) {
 	data := newAuthFakeData()
 	app, sender := testAuthApp(data)

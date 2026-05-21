@@ -25,8 +25,9 @@ type App struct {
 	Templates    map[string]*template.Template
 	LoginLimiter *loginLimiter
 	AuthLimiter  *authRateLimiters
-	Mailer       mail.Sender
-	BaseURL      string
+	Mailer                      mail.Sender
+	BaseURL                     string
+	NewAccountNotificationEmail string
 }
 
 type PageData struct {
@@ -131,6 +132,10 @@ func appBaseURL() string {
 	return "http://127.0.0.1:8888"
 }
 
+func newAccountNotificationEmail() string {
+	return strings.TrimSpace(os.Getenv("NEW_ACCOUNT_NOTIFICATION_EMAIL"))
+}
+
 func main() {
 	godotenv.Load()
 	dbConn := db.Connection{}
@@ -144,8 +149,9 @@ func main() {
 		Templates:    loadTemplates(),
 		LoginLimiter: newLoginLimiter(5, 5*time.Minute),
 		AuthLimiter:  newAuthRateLimiters(),
-		Mailer:       mailSenderFromEnv(),
-		BaseURL:      appBaseURL(),
+		Mailer:                      mailSenderFromEnv(),
+		BaseURL:                     appBaseURL(),
+		NewAccountNotificationEmail: newAccountNotificationEmail(),
 	}
 	http.HandleFunc("/login", app.loginHandler)
 	http.HandleFunc("/logout", app.logoutHandler)
