@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"strings"
 	"things/internal/db"
 	"time"
 )
@@ -116,6 +117,89 @@ func (t *Task) AllActiveForUser(userID int) ([]Task, error) {
 		tasks = append(tasks, task)
 	}
 	return tasks, rows.Err()
+}
+
+// TaskFilter holds optional filter and sort criteria for listing tasks.
+type TaskFilter struct {
+	Status    Status // empty = active + pending (default)
+	ProjectID int    // 0 = any
+	AreaID    int    // 0 = any
+	ContextID int    // 0 = any
+	Sort      string // priority_desc | priority_asc | created_desc | created_asc
+}
+
+func scanTasksFromRows(rows *sql.Rows, conn db.Connection) ([]Task, error) {
+	var tasks []Task
+	for rows.Next() {
+		var task Task
+		task.Connection = conn
+		var projectID sql.NullInt64
+		var areaID sql.NullInt64
+		var notes sql.NullString
+		err := rows.Scan(&task.ID, &task.Name, &task.Status, &task.Priority, &notes, &task.DateCreated, &projectID, &areaID, &task.UserID)
+		if err != nil {
+			return nil, err
+		}
+		if projectID.Valid {
+			task.ProjectID = int(projectID.Int64)
+		}
+		if areaID.Valid {
+			task.AreaID = int(areaID.Int64)
+		}
+		if notes.Valid {
+			task.Notes = notes.String
+		}
+		tasks = append(tasks, task)
+	}
+	return tasks, rows.Err()
+}
+
+// FilteredTasks returns tasks matching all non-zero filter fields (AND logic).
+func (t *Task) FilteredTasks(userID int, f TaskFilter) ([]Task, error) {
+	var b strings.Builder
+	b.WriteString(`SELECT DISTINCT t.id, t.name, t.status, t.priority, t.notes, t.date_created, t.project_id, t.area_id, t.user_id FROM tasks t`)
+
+	args := make([]interface{}, 0, 8)
+	if f.ContextID > 0 {
+		b.WriteString(` INNER JOIN task_contexts tc ON tc.task_id = t.id AND tc.context_id = ?`)
+		args = append(args, f.ContextID)
+	}
+
+	b.WriteString(` WHERE t.user_id = ?`)
+	args = append(args, userID)
+
+	if f.Status != "" {
+		b.WriteString(` AND t.status = ?`)
+		args = append(args, f.Status)
+	} else {
+		b.WriteString(` AND t.status IN (?, ?)`)
+		args = append(args, StatusActive, StatusPending)
+	}
+
+	if f.ProjectID > 0 {
+		b.WriteString(` AND t.project_id = ?`)
+		args = append(args, f.ProjectID)
+	}
+	if f.AreaID > 0 {
+		b.WriteString(` AND t.area_id = ?`)
+		args = append(args, f.AreaID)
+	}
+
+	switch f.Sort {
+	case "priority_desc":
+		b.WriteString(` ORDER BY t.priority DESC, t.date_created DESC`)
+	case "created_asc":
+		b.WriteString(` ORDER BY t.date_created ASC`)
+	default:
+		b.WriteString(` ORDER BY t.date_created DESC`)
+	}
+
+	rows, err := t.Query(b.String(), args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanTasksFromRows(rows, t.Connection)
 }
 
 // AllTasksForProject returns every task for the user on the given project (any status), newest first.

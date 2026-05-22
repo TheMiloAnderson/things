@@ -1,9 +1,83 @@
 {{define "task_list_readonly"}}
+{{$selectClass := "rounded-md border border-cgr-border bg-cgr-panel/60 px-2 py-1.5 text-sm text-white focus:border-cgr-sage focus:outline-none focus:ring-1 focus:ring-cgr-sage"}}
+{{if eq .ProjectPageID 0}}
+<details class="mb-4 rounded-lg border border-cgr-border bg-cgr-panel/30" id="filter-panel">
+    <summary class="cursor-pointer select-none px-3 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors">
+        Filter
+    </summary>
+    <form method="GET" action="/tasks/" class="px-3 pb-3 pt-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">
+        <input type="hidden" name="sort" value="{{.FilterSort}}" />
+        <div>
+            <label class="text-[11px] font-medium uppercase tracking-wider text-gray-500 block pb-1">Status</label>
+            <select name="status" class="w-full {{$selectClass}}">
+                <option value="" {{if eq .FilterStatus ""}}selected{{end}}>Active &amp; Pending</option>
+                <option value="active" {{if eq .FilterStatus "active"}}selected{{end}}>Active only</option>
+                <option value="pending" {{if eq .FilterStatus "pending"}}selected{{end}}>Pending only</option>
+                <option value="done" {{if eq .FilterStatus "done"}}selected{{end}}>Done</option>
+                <option value="canceled" {{if eq .FilterStatus "canceled"}}selected{{end}}>Canceled</option>
+            </select>
+        </div>
+        <div>
+            <label class="text-[11px] font-medium uppercase tracking-wider text-gray-500 block pb-1">Project</label>
+            <select name="project_id" class="w-full {{$selectClass}}">
+                <option value="">Any</option>
+                {{range .Projects}}
+                <option value="{{.ID}}" {{if eq .ID $.FilterProjectID}}selected{{end}}>{{.Name}}</option>
+                {{end}}
+            </select>
+        </div>
+        <div>
+            <label class="text-[11px] font-medium uppercase tracking-wider text-gray-500 block pb-1">Area</label>
+            <select name="area_id" class="w-full {{$selectClass}}">
+                <option value="">Any</option>
+                {{range .Areas}}
+                <option value="{{.ID}}" {{if eq .ID $.FilterAreaID}}selected{{end}}>{{.Name}}</option>
+                {{end}}
+            </select>
+        </div>
+        <div>
+            <label class="text-[11px] font-medium uppercase tracking-wider text-gray-500 block pb-1">Context</label>
+            <select name="context_id" class="w-full {{$selectClass}}">
+                <option value="">Any</option>
+                {{range .Contexts}}
+                <option value="{{.ID}}" {{if eq .ID $.FilterContextID}}selected{{end}}>{{.Name}}</option>
+                {{end}}
+            </select>
+        </div>
+        <div class="sm:col-span-2 md:col-span-4 flex gap-2">
+            <button type="submit" class="rounded-md bg-cgr-sage px-3 py-1.5 text-xs font-medium text-cgr-base hover:brightness-110 transition-[filter]">Apply</button>
+            <a href="/tasks/" class="rounded-md border border-cgr-border px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white hover:border-cgr-sage transition-colors">Reset</a>
+        </div>
+    </form>
+</details>
+<script>
+(function () {
+    var p = document.getElementById('filter-panel');
+    if (p && window.innerWidth >= 768) p.setAttribute('open', '');
+})();
+</script>
+{{end}}
 <div class="space-y-3">
-    <h2 class="text-lg md:text-xl font-semibold">{{if .TaskFormsTitle}}{{.TaskFormsTitle}}{{else}}Open tasks{{end}}</h2>
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h2 class="text-lg md:text-xl font-semibold">{{if eq .ProjectPageID 0}}{{.ListHeading}}{{else}}{{.TaskFormsTitle}}{{end}}</h2>
+        {{if eq .ProjectPageID 0}}
+        <form method="GET" action="/tasks/" class="flex items-center gap-2 shrink-0">
+            <input type="hidden" name="status" value="{{.FilterStatus}}" />
+            {{if .FilterProjectID}}<input type="hidden" name="project_id" value="{{.FilterProjectID}}" />{{end}}
+            {{if .FilterAreaID}}<input type="hidden" name="area_id" value="{{.FilterAreaID}}" />{{end}}
+            {{if .FilterContextID}}<input type="hidden" name="context_id" value="{{.FilterContextID}}" />{{end}}
+            <label for="task-sort" class="text-[11px] font-medium uppercase tracking-wider text-gray-500 whitespace-nowrap">Sort by</label>
+            <select id="task-sort" name="sort" class="{{$selectClass}}" onchange="this.form.submit()">
+                <option value="created_desc" {{if eq .FilterSort "created_desc"}}selected{{end}}>Newest first</option>
+                <option value="created_asc" {{if eq .FilterSort "created_asc"}}selected{{end}}>Oldest first</option>
+                <option value="priority_desc" {{if eq .FilterSort "priority_desc"}}selected{{end}}>Priority (high → low)</option>
+            </select>
+        </form>
+        {{end}}
+    </div>
 
     {{if not .Tasks}}
-    <p class="text-gray-500 text-sm rounded-lg border border-dashed border-cgr-border px-4 py-8 text-center">{{if ne .ProjectPageID 0}}No tasks in this project.{{else}}No open tasks.{{end}}</p>
+    <p class="text-gray-500 text-sm rounded-lg border border-dashed border-cgr-border px-4 py-8 text-center">{{if ne .ProjectPageID 0}}No tasks in this project.{{else if or .FilterStatus .FilterProjectID .FilterAreaID .FilterContextID}}No tasks match your filters.{{else}}No open tasks.{{end}}</p>
     {{else}}
     <div>
         <div class="hidden md:grid md:grid-cols-[2fr_1fr_1fr_72px] gap-x-3 items-center px-2 py-1 border-b border-cgr-border text-[11px] font-medium uppercase tracking-wider text-gray-500">

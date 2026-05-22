@@ -21,6 +21,7 @@ type HandlerData interface {
 	AllActiveProjects(userID int) ([]models.Project, error)
 	AllAreas(userID int) ([]models.Area, error)
 	AllActiveTasks(userID int) ([]models.Task, error)
+	FilteredTasks(userID int, f models.TaskFilter) ([]models.Task, error)
 	AllTasksForProject(userID, projectID int) ([]models.Task, error)
 	GetTask(taskID int) (models.Task, error)
 	SaveTask(t models.Task) (int64, error)
@@ -113,6 +114,11 @@ func (s *sqlHandlerData) AllAreas(userID int) ([]models.Area, error) {
 func (s *sqlHandlerData) AllActiveTasks(userID int) ([]models.Task, error) {
 	t := models.Task{Connection: *s.conn}
 	return t.AllActiveForUser(userID)
+}
+
+func (s *sqlHandlerData) FilteredTasks(userID int, f models.TaskFilter) ([]models.Task, error) {
+	t := models.Task{Connection: *s.conn}
+	return t.FilteredTasks(userID, f)
 }
 
 func (s *sqlHandlerData) AllTasksForProject(userID, projectID int) ([]models.Task, error) {

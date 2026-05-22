@@ -58,10 +58,41 @@ type TasksListViewModel struct {
 	Tasks          []models.Task
 	Projects       []models.Project
 	Areas          []models.Area
+	Contexts       []models.Context
 	AreasByID      map[int]string // area ID -> name
 	ProjectsByID   map[int]string // project ID -> name
 	ProjectPageID  int            // 0 on /tasks/; set on project edit (for empty-state copy)
 	TaskFormsTitle string         // e.g. "Open tasks", "Tasks in this project"
+	FilterSort      string
+	FilterStatus    string
+	FilterProjectID int
+	FilterAreaID    int
+	FilterContextID int
+	ListHeading     string // e.g. "Active Business Hours Tasks"
+}
+
+func taskListHeading(status models.Status, contextID int, contexts []models.Context) string {
+	statusLabels := map[models.Status]string{
+		"":                  "Active & Pending",
+		models.StatusActive:   "Active",
+		models.StatusPending:  "Pending",
+		models.StatusDone:     "Done",
+		models.StatusCanceled: "Canceled",
+	}
+	label := statusLabels[status]
+	if label == "" {
+		label = string(status)
+	}
+	parts := []string{label}
+	if contextID > 0 {
+		for _, c := range contexts {
+			if c.ID == contextID {
+				parts = append(parts, c.Name)
+				break
+			}
+		}
+	}
+	return strings.Join(parts, " ") + " Tasks"
 }
 
 func (a *App) inboxHandler(w http.ResponseWriter, r *http.Request) {
@@ -182,7 +213,24 @@ func (a *App) tasksListHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projects, err := a.Data.AllActiveProjects(userID)
+	sortParam := r.URL.Query().Get("sort")
+	statusParam := models.Status(strings.TrimSpace(r.URL.Query().Get("status")))
+	projectID, _ := strconv.Atoi(r.URL.Query().Get("project_id"))
+	areaID, _ := strconv.Atoi(r.URL.Query().Get("area_id"))
+	contextID, _ := strconv.Atoi(r.URL.Query().Get("context_id"))
+
+	filter := models.TaskFilter{
+		Status:    statusParam,
+		ProjectID: projectID,
+		AreaID:    areaID,
+		ContextID: contextID,
+		Sort:      sortParam,
+	}
+	if filter.Sort == "" {
+		filter.Sort = "created_desc"
+	}
+
+	projects, err := a.Data.AllProjectsForUser(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -192,15 +240,20 @@ func (a *App) tasksListHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	tasks, err := a.Data.AllActiveTasks(userID)
+	contexts, err := a.Data.AllContextsForUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	tasks, err := a.Data.FilteredTasks(userID, filter)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	areasByID := make(map[int]string, len(areas))
-	for _, a := range areas {
-		areasByID[a.ID] = a.Name
+	for _, ar := range areas {
+		areasByID[ar.ID] = ar.Name
 	}
 	projectsByID := make(map[int]string, len(projects))
 	for _, p := range projects {
@@ -211,12 +264,19 @@ func (a *App) tasksListHandler(w http.ResponseWriter, r *http.Request) {
 		IsAuthenticated: true,
 		Username:        u.Name,
 		Data: TasksListViewModel{
-			Tasks:          tasks,
-			Projects:       projects,
-			Areas:          areas,
-			AreasByID:      areasByID,
-			ProjectsByID:   projectsByID,
-			TaskFormsTitle: "Open tasks",
+			Tasks:           tasks,
+			Projects:        projects,
+			Areas:           areas,
+			Contexts:        contexts,
+			AreasByID:       areasByID,
+			ProjectsByID:    projectsByID,
+			TaskFormsTitle:  "Open tasks",
+			ListHeading:     taskListHeading(filter.Status, filter.ContextID, contexts),
+			FilterSort:      filter.Sort,
+			FilterStatus:    string(filter.Status),
+			FilterProjectID: filter.ProjectID,
+			FilterAreaID:    filter.AreaID,
+			FilterContextID: filter.ContextID,
 		},
 	}
 	a.render(w, r, "tasks_list.html", pageData)

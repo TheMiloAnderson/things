@@ -118,6 +118,15 @@ func (f *fakeHandlerData) AllActiveTasks(userID int) ([]models.Task, error) {
 	return f.Tasks, nil
 }
 
+func (f *fakeHandlerData) FilteredTasks(userID int, filter models.TaskFilter) ([]models.Task, error) {
+	if f.TasksErr != nil {
+		return nil, f.TasksErr
+	}
+	_ = userID
+	_ = filter
+	return f.Tasks, nil
+}
+
 func (f *fakeHandlerData) AllTasksForProject(userID, projectID int) ([]models.Task, error) {
 	if f.TasksErr != nil {
 		return nil, f.TasksErr
@@ -323,7 +332,7 @@ func TestTasksListHandler_RedirectAndList(t *testing.T) {
 		if !strings.Contains(body, "Alpha task") {
 			t.Fatalf("body should contain task name; got %q", body)
 		}
-		if !strings.Contains(body, "Open tasks") {
+		if !strings.Contains(body, "Active &amp; Pending Tasks") {
 			t.Fatalf("body should contain page title")
 		}
 	})
