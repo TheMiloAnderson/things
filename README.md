@@ -33,7 +33,16 @@ The app listens on `http://127.0.0.1:8888`. MySQL runs in a container on the com
 | `MAIL_FROM_ADDR` | no | From address for emails |
 | `NEW_ACCOUNT_NOTIFICATION_EMAIL` | no | Admin notification on signup |
 
-## Running locally (without Docker)
+## Deploying to miloserve
+
+After pushing changes, SSH to the server and run:
+
+```bash
+ssh -t miloserve-tunnel 'cd /home/manderson/projects/things && git pull && bash scripts/miloserve-deploy.sh'
+```
+
+This installs Docker (first run), imports the MySQL dump, starts containers, and disables the legacy systemd service. Requires sudo.
+
 
 Requires a local MySQL server with the `tasks` database. Set `DBUSER` and `DBPASS` in a `.env` file, apply schema from `internal/db/tables.sql` and migrations, then:
 
