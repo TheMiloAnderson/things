@@ -1,0 +1,44 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: tasks
+      MYSQL_USER: ${DBUSER}
+      MYSQL_PASSWORD: ${DBPASS}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./internal/db/tables.sql:/docker-entrypoint-initdb.d/001_tables.sql:ro
+      - ./internal/db/migrations/001_add_task_notes.up.sql:/docker-entrypoint-initdb.d/002_add_task_notes.up.sql:ro
+      - ./internal/db/migrations/002_add_email_and_tokens.up.sql:/docker-entrypoint-initdb.d/003_add_email_and_tokens.up.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8888:8888"
+    environment:
+      LISTEN_ADDR: 0.0.0.0:8888
+      DBADDR: db:3306
+      DBUSER: ${DBUSER}
+      DBPASS: ${DBPASS}
+      SESSION_KEY: ${SESSION_KEY}
+      CSRF_KEY: ${CSRF_KEY}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM_ADDR: ${MAIL_FROM_ADDR:-}
+      APP_BASE_URL: ${APP_BASE_URL:-http://127.0.0.1:8888}
+      NEW_ACCOUNT_NOTIFICATION_EMAIL: ${NEW_ACCOUNT_NOTIFICATION_EMAIL:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

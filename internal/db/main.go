@@ -26,6 +26,9 @@ func (t *Connection) Connect(dbName string) {
 	cfg.Passwd = os.Getenv("DBPASS")
 	cfg.Net = "tcp"
 	cfg.Addr = "127.0.0.1:3306"
+	if v := os.Getenv("DBADDR"); v != "" {
+		cfg.Addr = v
+	}
 	cfg.DBName = dbName
 	cfg.ParseTime = true
 
