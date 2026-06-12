@@ -14,10 +14,28 @@ if [[ ! -f .env ]]; then
   exit 1
 fi
 
-# shellcheck disable=SC1091
-source .env
+env_val() {
+  local key="$1"
+  local line
+  line="$(grep -E "^${key}=" .env | tail -n 1 || true)"
+  line="${line#${key}=}"
+  line="${line%\"}"
+  line="${line#\"}"
+  line="${line%\'}"
+  line="${line#\'}"
+  printf '%s' "$line"
+}
 
-if [[ -z "${MYSQL_ROOT_PASSWORD:-}" ]]; then
+DBUSER="$(env_val DBUSER)"
+DBPASS="$(env_val DBPASS)"
+MYSQL_ROOT_PASSWORD="$(env_val MYSQL_ROOT_PASSWORD)"
+
+if [[ -z "$DBUSER" || -z "$DBPASS" ]]; then
+  echo "DBUSER and DBPASS must be set in .env" >&2
+  exit 1
+fi
+
+if [[ -z "$MYSQL_ROOT_PASSWORD" ]]; then
   echo "MYSQL_ROOT_PASSWORD missing from .env" >&2
   exit 1
 fi
