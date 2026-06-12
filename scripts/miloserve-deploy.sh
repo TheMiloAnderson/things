@@ -79,7 +79,7 @@ dump_host_mysql() {
   fi
 
   echo "Dumping host MySQL tasks database..."
-  mysqldump --single-transaction --routines --triggers \
+  mysqldump --no-tablespaces --single-transaction --routines --triggers \
     -u"$DBUSER" -p"$DBPASS" tasks > "$dump_file"
   echo "Dump saved to $dump_file"
 }
