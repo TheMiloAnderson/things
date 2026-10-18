@@ -138,13 +138,14 @@ start_db() {
   echo "Starting MySQL container..."
   compose_cmd up -d db
 
-  # A bare ping succeeds against the temporary server MySQL starts during
-  # initialization, before the root password exists. Wait until the real
-  # server accepts the password from the container environment.
-  echo "Waiting for MySQL to accept the root password..."
+  # The image starts a temporary server on a local socket, loads the
+  # password, then shuts it down and starts the real server on port 3306.
+  # A socket login succeeds against the temporary server, so an import
+  # started then dies with "Lost connection" when that server exits.
+  echo "Waiting for MySQL to listen on port 3306..."
   for _ in $(seq 1 60); do
     if compose_cmd exec -T db sh -c \
-      'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot -N -e "SELECT 1"' >/dev/null 2>&1; then
+      'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot -h 127.0.0.1 --protocol=TCP -N -e "SELECT 1"' >/dev/null 2>&1; then
       echo "MySQL is ready."
       return
     fi
@@ -164,7 +165,7 @@ import_dump() {
 
   echo "Importing dump into containerized MySQL..."
   compose_cmd exec -T db sh -c \
-    'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot tasks' < "$dump_file"
+    'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot -h 127.0.0.1 --protocol=TCP tasks' < "$dump_file"
 }
 
 start_app() {
