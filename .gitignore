@@ -1,2 +1,7 @@
 .env
+.env.example
 .DS_Store
+tasks_dump.sql
+README_INTERNAL.md
+backups/
+.miloserve-migrated

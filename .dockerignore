@@ -1,0 +1,9 @@
+.env
+.git
+.gitignore
+.DS_Store
+*.md
+.cursor
+tasks_dump.sql
+backups
+.miloserve-migrated
