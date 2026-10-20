@@ -69,8 +69,8 @@ prune_backups() {
 }
 
 start_app() {
-  echo "Building and restarting app container..."
-  compose_cmd up -d --build app
+  echo "Building and restarting app and backup containers..."
+  compose_cmd up -d --build app backup
 }
 
 verify_app() {

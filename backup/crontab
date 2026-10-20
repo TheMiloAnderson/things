@@ -1,0 +1,2 @@
+# Sunday 03:00 UTC. TZ=UTC is set on the container.
+0 3 * * 0 /usr/local/bin/backup.sh
