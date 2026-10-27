@@ -39,6 +39,8 @@ services:
       MAIL_FROM_ADDR: ${MAIL_FROM_ADDR:-}
       APP_BASE_URL: ${APP_BASE_URL:-http://127.0.0.1:8888}
       NEW_ACCOUNT_NOTIFICATION_EMAIL: ${NEW_ACCOUNT_NOTIFICATION_EMAIL:-}
+      # Set to 1 to allow new accounts. Unset disables signup; password reset stays available.
+      ALLOW_SIGNUP: ${ALLOW_SIGNUP:-}
     depends_on:
       db:
         condition: service_healthy

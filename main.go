@@ -18,16 +18,18 @@ import (
 )
 
 type App struct {
-	Connection   *db.Connection
-	Data         HandlerData
-	Auth         Authenticator
-	Store        *sessions.CookieStore
-	Templates    map[string]*template.Template
-	LoginLimiter *loginLimiter
-	AuthLimiter  *authRateLimiters
+	Connection                  *db.Connection
+	Data                        HandlerData
+	Auth                        Authenticator
+	Store                       *sessions.CookieStore
+	Templates                   map[string]*template.Template
+	LoginLimiter                *loginLimiter
+	AuthLimiter                 *authRateLimiters
 	Mailer                      mail.Sender
 	BaseURL                     string
 	NewAccountNotificationEmail string
+	// AllowSignup is true only when ALLOW_SIGNUP=1. Password reset stays available either way.
+	AllowSignup bool
 }
 
 type PageData struct {
@@ -136,22 +138,29 @@ func newAccountNotificationEmail() string {
 	return strings.TrimSpace(os.Getenv("NEW_ACCOUNT_NOTIFICATION_EMAIL"))
 }
 
+// allowSignupFromEnv reports whether new accounts can be created.
+// Unset or any value other than 1 disables signup. Password reset is unaffected.
+func allowSignupFromEnv() bool {
+	return os.Getenv("ALLOW_SIGNUP") == "1"
+}
+
 func main() {
 	godotenv.Load()
 	dbConn := db.Connection{}
 	dbConn.Connect("tasks")
 	store := getStore()
 	app := &App{
-		Connection:   &dbConn,
-		Data:         &sqlHandlerData{conn: &dbConn},
-		Auth:         &SessionAuthenticator{Store: store},
-		Store:        store,
-		Templates:    loadTemplates(),
-		LoginLimiter: newLoginLimiter(5, 5*time.Minute),
-		AuthLimiter:  newAuthRateLimiters(),
+		Connection:                  &dbConn,
+		Data:                        &sqlHandlerData{conn: &dbConn},
+		Auth:                        &SessionAuthenticator{Store: store},
+		Store:                       store,
+		Templates:                   loadTemplates(),
+		LoginLimiter:                newLoginLimiter(5, 5*time.Minute),
+		AuthLimiter:                 newAuthRateLimiters(),
 		Mailer:                      mailSenderFromEnv(),
 		BaseURL:                     appBaseURL(),
 		NewAccountNotificationEmail: newAccountNotificationEmail(),
+		AllowSignup:                 allowSignupFromEnv(),
 	}
 	http.HandleFunc("/login", app.loginHandler)
 	http.HandleFunc("/logout", app.logoutHandler)
@@ -201,6 +210,12 @@ func main() {
 		handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			inner.ServeHTTP(w, csrf.PlaintextHTTPRequest(r))
 		})
+	}
+
+	if app.AllowSignup {
+		log.Println("new account creation is enabled (ALLOW_SIGNUP=1)")
+	} else {
+		log.Println("new account creation is disabled; set ALLOW_SIGNUP=1 to enable it")
 	}
 
 	fmt.Printf("Server is starting on %s...\n", addr)

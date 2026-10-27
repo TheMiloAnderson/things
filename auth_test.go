@@ -11,6 +11,8 @@ import (
 
 	"things/internal/mail"
 	"things/internal/models"
+
+	"github.com/gorilla/csrf"
 )
 
 type authFakeData struct {
@@ -128,6 +130,7 @@ func testAuthApp(data HandlerData) (*App, *mail.NoopSender) {
 func TestSignupHandler_SendsNewAccountNotification(t *testing.T) {
 	data := newAuthFakeData()
 	app, sender := testAuthApp(data)
+	app.AllowSignup = true
 	app.NewAccountNotificationEmail = "admin@example.com"
 
 	body := url.Values{
@@ -155,12 +158,13 @@ func TestSignupHandler_SendsNewAccountNotification(t *testing.T) {
 func TestSignupHandler_SendsVerification(t *testing.T) {
 	data := newAuthFakeData()
 	app, sender := testAuthApp(data)
+	app.AllowSignup = true
 
 	body := url.Values{
-		"username":          {"newuser"},
-		"email":             {"new@example.com"},
-		"password":          {"longpassword12"},
-		"password_confirm":  {"longpassword12"},
+		"username":         {"newuser"},
+		"email":            {"new@example.com"},
+		"password":         {"longpassword12"},
+		"password_confirm": {"longpassword12"},
 	}
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(body.Encode()))
@@ -185,6 +189,7 @@ func TestSignupHandler_DuplicateEmail(t *testing.T) {
 	data := newAuthFakeData()
 	data.usersByEmail["taken@example.com"] = models.User{ID: 1, Email: "taken@example.com", Name: "x"}
 	app, _ := testAuthApp(data)
+	app.AllowSignup = true
 
 	body := url.Values{
 		"username":         {"other"},
@@ -242,6 +247,84 @@ func TestVerifyEmailHandler_Redirects(t *testing.T) {
 	u := data.usersByEmail["u@example.com"]
 	if !u.IsEmailVerified() {
 		t.Fatal("user should be verified")
+	}
+}
+
+func TestSignupHandler_DisabledByDefault(t *testing.T) {
+	data := newAuthFakeData()
+	app, sender := testAuthApp(data)
+
+	body := url.Values{
+		"username":         {"newuser"},
+		"email":            {"new@example.com"},
+		"password":         {"longpassword12"},
+		"password_confirm": {"longpassword12"},
+	}
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodPost, "/signup", strings.NewReader(body.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	app.signupHandler(w, r)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("status %d, want %d", w.Code, http.StatusForbidden)
+	}
+	if len(data.created) != 0 {
+		t.Fatalf("created %d users", len(data.created))
+	}
+	if sender.Last.To != "" {
+		t.Fatalf("sent mail to %q", sender.Last.To)
+	}
+	if !strings.Contains(w.Body.String(), "Registration is closed") {
+		t.Fatalf("body %s", w.Body.String())
+	}
+	if strings.Contains(w.Body.String(), `name="password"`) {
+		t.Fatal("signup form should not be rendered")
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest(http.MethodGet, "/signup", nil)
+	app.signupHandler(w, r)
+	if w.Code != http.StatusOK {
+		t.Fatalf("get status %d", w.Code)
+	}
+	if strings.Contains(w.Body.String(), `name="password"`) {
+		t.Fatal("signup form should not be rendered")
+	}
+
+	login := csrf.Protect([]byte("01234567890123456789012345678901"), csrf.Secure(false))(http.HandlerFunc(app.loginHandler))
+
+	app.AllowSignup = true
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest(http.MethodGet, "/login", nil)
+	login.ServeHTTP(w, r)
+	if !strings.Contains(w.Body.String(), "Create account") {
+		t.Fatal("login should link to signup when enabled")
+	}
+
+	app.AllowSignup = false
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest(http.MethodGet, "/login", nil)
+	login.ServeHTTP(w, r)
+	if strings.Contains(w.Body.String(), "Create account") {
+		t.Fatal("login should hide signup when disabled")
+	}
+	if !strings.Contains(w.Body.String(), "Forgot password?") {
+		t.Fatal("password reset link should stay")
+	}
+}
+
+func TestAllowSignupFromEnv(t *testing.T) {
+	t.Setenv("ALLOW_SIGNUP", "")
+	if allowSignupFromEnv() {
+		t.Fatal("unset ALLOW_SIGNUP should disable signup")
+	}
+	t.Setenv("ALLOW_SIGNUP", "true")
+	if allowSignupFromEnv() {
+		t.Fatal("only 1 should enable signup")
+	}
+	t.Setenv("ALLOW_SIGNUP", "1")
+	if !allowSignupFromEnv() {
+		t.Fatal("ALLOW_SIGNUP=1 should enable signup")
 	}
 }
 

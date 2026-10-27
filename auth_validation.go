@@ -43,11 +43,12 @@ func hashPassword(pass string) (string, error) {
 }
 
 type AuthViewModel struct {
-	Flash      string
-	Error      string
-	Message    string
-	Email      string
-	Username   string
-	Token      string
-	ShowResend bool
+	Flash       string
+	Error       string
+	Message     string
+	Email       string
+	Username    string
+	Token       string
+	ShowResend  bool
+	AllowSignup bool
 }

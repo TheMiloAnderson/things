@@ -37,7 +37,9 @@
     {{end}}
     <p class="mt-4 flex justify-between text-sm text-gray-400">
         <a href="/forgot-password" class="hover:text-cgr-sage">Forgot password?</a>
+        {{if $vm.AllowSignup}}
         <a href="/signup" class="hover:text-cgr-sage">Create account</a>
+        {{end}}
     </p>
 </div>
 {{end}}

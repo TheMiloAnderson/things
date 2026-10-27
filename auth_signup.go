@@ -26,12 +26,19 @@ func (a *App) authPage(w http.ResponseWriter, r *http.Request, tmpl string, vm A
 }
 
 func (a *App) signupHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	if r.Method != http.MethodGet && r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if !a.AllowSignup {
+		if r.Method == http.MethodPost {
+			w.WriteHeader(http.StatusForbidden)
+		}
 		a.authPage(w, r, "signup.html", AuthViewModel{})
 		return
 	}
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	if r.Method == http.MethodGet {
+		a.authPage(w, r, "signup.html", AuthViewModel{AllowSignup: true})
 		return
 	}
 
@@ -45,7 +52,7 @@ func (a *App) signupHandler(w http.ResponseWriter, r *http.Request) {
 	pass := r.FormValue("password")
 	confirm := r.FormValue("password_confirm")
 
-	vm := AuthViewModel{Username: name, Email: email}
+	vm := AuthViewModel{Username: name, Email: email, AllowSignup: true}
 
 	if !validUsername(name) {
 		if a.AuthLimiter != nil {

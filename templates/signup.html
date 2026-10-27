@@ -1,6 +1,14 @@
 {{define "content"}}
 {{$vm := .}}
 <div class="mx-auto max-w-xs rounded-lg border border-cgr-border bg-cgr-panel/50 p-6">
+    {{if not $vm.AllowSignup}}
+    <h2 class="text-lg font-semibold mb-3">Registration is closed</h2>
+    <p class="text-sm text-gray-300">New accounts cannot be created right now. Existing accounts can still sign in and reset their password.</p>
+    <p class="mt-4 flex justify-between text-sm text-gray-400">
+        <a href="/login" class="hover:text-cgr-sage">Sign in</a>
+        <a href="/forgot-password" class="hover:text-cgr-sage">Forgot password?</a>
+    </p>
+    {{else}}
     <h2 class="text-lg font-semibold mb-5">Create account</h2>
     {{if $vm.Error}}
     <p class="mb-4 rounded-md border border-cgr-rose/50 bg-cgr-rose/10 px-3 py-2 text-sm text-cgr-rose">{{$vm.Error}}</p>
@@ -36,5 +44,6 @@
     <p class="mt-4 text-center text-sm text-gray-400">
         Already have an account? <a href="/login" class="text-cgr-sage hover:underline">Sign in</a>
     </p>
+    {{end}}
 </div>
 {{end}}

@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 	"things/internal/models"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/lpernett/godotenv"
@@ -34,7 +34,7 @@ func getStore() *sessions.CookieStore {
 
 func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		vm := AuthViewModel{}
+		vm := AuthViewModel{AllowSignup: a.AllowSignup}
 		switch r.URL.Query().Get("verified") {
 		case "1":
 			vm.Flash = "verified"
@@ -91,9 +91,10 @@ func (a *App) loginHandler(w http.ResponseWriter, r *http.Request) {
 		a.render(w, r, "login.html", PageData{
 			IsAuthenticated: false,
 			Data: AuthViewModel{
-				Error:      "Please verify your email before signing in.",
-				Email:      u.Email,
-				ShowResend: true,
+				Error:       "Please verify your email before signing in.",
+				Email:       u.Email,
+				ShowResend:  true,
+				AllowSignup: a.AllowSignup,
 			},
 		})
 		return
